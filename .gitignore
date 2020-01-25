@@ -1,0 +1,7 @@
+.cproject
+.project
+.mxproject
+/.settings
+ai_prod Debug.launch
+ai_prod Release.launch
+/Debug
