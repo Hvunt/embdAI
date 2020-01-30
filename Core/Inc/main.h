@@ -50,7 +50,7 @@ extern "C" {
 /* USER CODE BEGIN EM */
 #define ADC_CONVERSION 0.000806
 #define SAMPLES_COUNT 180*3
-#define FRAMES_COUNT 100
+#define FRAMES_COUNT 1
 /* USER CODE END EM */
 
 /* Exported functions prototypes ---------------------------------------------*/
