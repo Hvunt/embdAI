@@ -41,6 +41,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+#define FILE_NAME "LOG.BIN"
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -61,6 +62,7 @@ volatile static uint8_t start_flag = 0;
 volatile uint8_t uart_wait_flag = 0;
 //volatile uint16_t adc_dma_buffer[3]; // x-, y- distance sensor, CRR
 //volatile uint32_t adc_buf_iterator = 0;
+volatile uint16_t line_counter = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -79,6 +81,11 @@ static void convert_buffers(uint16_t *in_data, uint8_t *out_data,
 //static void _append_EOS(char *s1, uint16_t input_string_length,
 //		uint8_t type_EOS);
 //static void _append_divider(char *input, uint16_t length);
+
+//static uint8_t _check_SD_status(FIL *file, char *file_name);
+static uint8_t _write_data_SD(char *file_name, uint8_t *data,
+		uint16_t length);
+
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -124,16 +131,15 @@ int main(void)
   MX_SDMMC1_SD_Init();
   MX_FATFS_Init();
   MX_USART2_UART_Init();
+  MX_ADC3_Init();
   /* USER CODE BEGIN 2 */
   /* USER CODE END 2 */
+ 
+ 
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-
-	FIL file;
 	FATFS fs;
-	FRESULT fr;
-
 
 	uint8_t rx_foo[3];
 	HAL_UART_Receive_IT(&huart2, rx_foo, 3);
@@ -148,18 +154,7 @@ int main(void)
 			HAL_ADC_Start_IT(&hadc1);
 			uint8_t rx_foo2[3];
 			HAL_UART_Receive_IT(&huart2, rx_foo2, 3);
-			if (fr == FR_OK) {
-				fr = f_open(&file, "log.bin", FA_WRITE | FA_OPEN_APPEND);
-				if (fr == FR_OK) {
-					//seek to end of the file to append data
-					fr = f_lseek(&file, f_size(&file));
-					if (fr != FR_OK) {
-						f_close(&file);
-					}
-				} else {
-					Error_Handler();
-				}
-			}
+
 
 		}
 		if (adc_ready_conversion) {
@@ -179,7 +174,7 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-				convert_buffers((uint16_t *)adc_buffer, tx_buffer,
+				convert_buffers((uint16_t*) adc_buffer, tx_buffer,
 				SAMPLES_COUNT);
 //				uint8_t ai_waiting_error_counter = 0;
 //				uint8_t _ai_ready = aiGetReady();
@@ -201,14 +196,13 @@ int main(void)
 //				_append_EOS((char*) tx_buffer, sizeof(tx_buffer), 2);
 //				_append_EOS((char*) tx_buffer, sizeof(tx_buffer), 0); //for Matlab connection
 //				f_printf(&file, (TCHAR*) tx_buffer);
-				UINT bw;
-				f_write(&file, tx_buffer, SAMPLES_COUNT * sizeof(uint16_t), &bw);
-				uint16_t temp = 0xFFFF;
-				f_write(&file, &temp, sizeof(temp), &bw);
-				f_sync(&file);
-				uart_wait_flag = 1;
+				if(_write_data_SD(FILE_NAME, tx_buffer, SAMPLES_COUNT * sizeof(uint16_t)) != HAL_OK){
+					Error_Handler();
+				}
 
-				HAL_UART_Transmit_IT(&huart2, tx_buffer, SAMPLES_COUNT * sizeof(uint16_t));
+				uart_wait_flag = 1;
+				HAL_UART_Transmit_IT(&huart2, tx_buffer,
+				SAMPLES_COUNT * sizeof(uint16_t));
 				if (HAL_ADC_Start_IT(&hadc1) != HAL_OK) {
 					Error_Handler();
 				}
@@ -225,7 +219,6 @@ int main(void)
 			} else {
 				HAL_ADC_Stop_IT(&hadc1);
 				measurements_counter = 0;
-				f_close(&file);
 				HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
 
 				//GET ELAPSED TIME OF ONE FRAME
@@ -306,6 +299,80 @@ void SystemClock_Config(void)
 
 /* USER CODE BEGIN 4 */
 
+static uint8_t _write_data_SD(char *file_name, uint8_t *data,
+		uint16_t length) {
+	FIL file;
+	FRESULT fr;
+	UINT bw;
+
+	fr = f_open(&file, file_name, FA_WRITE | FA_OPEN_APPEND);
+	f_sync(&file);
+	if (fr == FR_OK) {
+		//seek to end of the file to append data
+		fr = f_lseek(&file, f_size(&file));
+		if (fr != FR_OK) {
+			f_close(&file);
+			return HAL_ERROR;
+		}
+	} else {
+		f_close(&file);
+		return HAL_ERROR;
+	}
+
+
+	uint8_t temp[2] = { line_counter >> 8, line_counter };
+	fr = f_write(&file, temp, sizeof(temp), &bw);
+	if (fr != FR_OK) {
+		f_close(&file);
+		return HAL_ERROR;
+	}
+	f_sync(&file);
+	line_counter++;
+
+	fr = f_write(&file, data, length, &bw);
+	if (fr != FR_OK) {
+		f_close(&file);
+		return HAL_ERROR;
+	}
+	f_sync(&file);
+	HAL_Delay(1);
+
+	uint16_t divider = 0xFFFF;
+	fr = f_write(&file, &divider, sizeof(divider), &bw);
+	if (fr != FR_OK) {
+		f_close(&file);
+		return HAL_ERROR;
+	}
+	f_sync(&file);
+
+	f_close(&file);
+	return HAL_OK;
+}
+
+//static uint8_t _check_SD_status(FIL *file, char *file_name) {
+//	uint8_t status = HAL_OK;
+//	uint8_t error_counter = 0;
+//
+//	FRESULT fr;
+//
+//	fr = f_open(file, file_name, FA_OPEN_ALWAYS);
+//	f_sync(file);
+//	fr = f_close(file);
+//	while (fr != FR_OK) {
+//		HAL_Delay(1);
+//
+//		fr = f_open(file, file_name, FA_OPEN_ALWAYS);
+//		fr = f_close(file);
+//		error_counter++;
+//		if (error_counter > 10) {
+//			status = HAL_ERROR;
+//			break;
+//		}
+//	}
+//
+//	return status;
+//}
+
 //static void convert_buffers(float *in_data, char *out_data,
 //		uint32_t input_buffer_size) {
 //	uint32_t last_pos = 0;
@@ -324,9 +391,9 @@ void SystemClock_Config(void)
 //		++last_pos;
 //	}
 //}
-static void convert_buffers(uint16_t* in_data, uint8_t* out_data,
+static void convert_buffers(uint16_t *in_data, uint8_t *out_data,
 		uint32_t input_buffer_size) {
-	for(uint32_t i = 0, j = 0; i < input_buffer_size;i++){
+	for (uint32_t i = 0, j = 0; i < input_buffer_size; i++) {
 		uint16_t temp = in_data[i];
 		out_data[j] = temp >> 8;
 		++j;
