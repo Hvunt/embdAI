@@ -25,12 +25,14 @@
 #include "fatfs.h"
 #include "sdmmc.h"
 #include "usart.h"
+#include "usb_device.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <string.h>
 #include <math.h>
+#include "usbd_cdc_if.h"
 //#include "filter.h"
 /* USER CODE END Includes */
 
@@ -83,8 +85,7 @@ static void convert_buffers(uint16_t *in_data, uint8_t *out_data,
 //static void _append_divider(char *input, uint16_t length);
 
 //static uint8_t _check_SD_status(FIL *file, char *file_name);
-static uint8_t _write_data_SD(char *file_name, uint8_t *data,
-		uint16_t length);
+static uint8_t _write_data_SD(char *file_name, uint8_t *data, uint16_t length);
 
 /* USER CODE END PFP */
 
@@ -132,6 +133,7 @@ int main(void)
   MX_FATFS_Init();
   MX_USART2_UART_Init();
   MX_ADC3_Init();
+  MX_USB_DEVICE_Init();
   /* USER CODE BEGIN 2 */
   /* USER CODE END 2 */
  
@@ -141,20 +143,19 @@ int main(void)
   /* USER CODE BEGIN WHILE */
 	FATFS fs;
 
-	uint8_t rx_foo[3];
-	HAL_UART_Receive_IT(&huart2, rx_foo, 3);
+//	uint8_t rx_foo[3];
+//	HAL_UART_Receive_IT(&huart2, rx_foo, 3);
 	uint32_t measurements_counter = 0;
 	f_mount(&fs, "", 0);
-	//start_flag = 1;
+
 	while (1) {
 		if (start_flag) {
 			start_flag = 0;
 			measurements_counter = 0;
 			HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
 			HAL_ADC_Start_IT(&hadc1);
-			uint8_t rx_foo2[3];
-			HAL_UART_Receive_IT(&huart2, rx_foo2, 3);
-
+//			uint8_t rx_foo2[3];
+//			HAL_UART_Receive_IT(&huart2, rx_foo2, 3);
 
 		}
 		if (adc_ready_conversion) {
@@ -196,25 +197,30 @@ int main(void)
 //				_append_EOS((char*) tx_buffer, sizeof(tx_buffer), 2);
 //				_append_EOS((char*) tx_buffer, sizeof(tx_buffer), 0); //for Matlab connection
 //				f_printf(&file, (TCHAR*) tx_buffer);
-				if(_write_data_SD(FILE_NAME, tx_buffer, SAMPLES_COUNT * sizeof(uint16_t)) != HAL_OK){
+				if (_write_data_SD(FILE_NAME, tx_buffer,
+						SAMPLES_COUNT * sizeof(uint16_t)) != HAL_OK) {
 					Error_Handler();
 				}
 
-				uart_wait_flag = 1;
-				HAL_UART_Transmit_IT(&huart2, tx_buffer,
-				SAMPLES_COUNT * sizeof(uint16_t));
+				if(CDC_Transmit_FS(tx_buffer, SAMPLES_COUNT * sizeof(uint16_t)) != USBD_OK){
+					Error_Handler();
+				}
+
+//				uart_wait_flag = 1;
+//				HAL_UART_Transmit_IT(&huart2, tx_buffer,
+//				SAMPLES_COUNT * sizeof(uint16_t));
 				if (HAL_ADC_Start_IT(&hadc1) != HAL_OK) {
 					Error_Handler();
 				}
-				uint8_t uart_error_counter = 0;
-				while (uart_wait_flag) {
-					HAL_Delay(1);
-					if (uart_error_counter > 20) {
-						Error_Handler();
-						break;
-					} else
-						uart_error_counter++;
-				}
+//				uint8_t uart_error_counter = 0;
+//				while (uart_wait_flag) {
+//					HAL_Delay(1);
+//					if (uart_error_counter > 20) {
+//						Error_Handler();
+//						break;
+//					} else
+//						uart_error_counter++;
+//				}
 				free(tx_buffer);
 			} else {
 				HAL_ADC_Stop_IT(&hadc1);
@@ -299,8 +305,7 @@ void SystemClock_Config(void)
 
 /* USER CODE BEGIN 4 */
 
-static uint8_t _write_data_SD(char *file_name, uint8_t *data,
-		uint16_t length) {
+static uint8_t _write_data_SD(char *file_name, uint8_t *data, uint16_t length) {
 	FIL file;
 	FRESULT fr;
 	UINT bw;
@@ -318,7 +323,6 @@ static uint8_t _write_data_SD(char *file_name, uint8_t *data,
 		f_close(&file);
 		return HAL_ERROR;
 	}
-
 
 	uint8_t temp[2] = { line_counter >> 8, line_counter };
 	fr = f_write(&file, temp, sizeof(temp), &bw);
