@@ -31,7 +31,7 @@
 #include "usbd_cdc.h"
 
 /* USER CODE BEGIN INCLUDE */
-
+#include "device.h"
 /* USER CODE END INCLUDE */
 
 /** @addtogroup STM32_USB_OTG_DEVICE_LIBRARY
@@ -49,7 +49,8 @@
   * @{
   */
 /* USER CODE BEGIN EXPORTED_DEFINES */
-
+#define APP_RX_DATA_SIZE  64
+#define APP_TX_DATA_SIZE  2048
 /* USER CODE END EXPORTED_DEFINES */
 
 /**
@@ -91,7 +92,8 @@
 extern USBD_CDC_ItfTypeDef USBD_Interface_fops_FS;
 
 /* USER CODE BEGIN EXPORTED_VARIABLES */
-
+extern volatile Device_t device;
+extern volatile uint8_t new_data_flag;
 /* USER CODE END EXPORTED_VARIABLES */
 
 /**
@@ -106,7 +108,7 @@ extern USBD_CDC_ItfTypeDef USBD_Interface_fops_FS;
 uint8_t CDC_Transmit_FS(uint8_t* Buf, uint16_t Len);
 
 /* USER CODE BEGIN EXPORTED_FUNCTIONS */
-
+uint8_t CDC_FlushRx_FS();
 /* USER CODE END EXPORTED_FUNCTIONS */
 
 /**

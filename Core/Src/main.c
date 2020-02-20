@@ -24,7 +24,6 @@
 #include "crc.h"
 #include "fatfs.h"
 #include "sdmmc.h"
-#include "usart.h"
 #include "usb_device.h"
 #include "gpio.h"
 
@@ -34,6 +33,7 @@
 #include <math.h>
 #include "usbd_cdc_if.h"
 //#include "filter.h"
+#include "device.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -49,22 +49,23 @@
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
 #define STRING_VALUE_DIVIDER ('_')
+
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
 volatile uint16_t adc_buffer[SAMPLES_COUNT] = { 0 };
-//float adc_buffer[SAMPLES_COUNT] = { 0 };
 volatile uint8_t adc_ready_conversion = 0;
 volatile uint32_t adc_buffer_counter = 0;
-//volatile uint8_t adc_dma_ready = 0;
-//float *adc_buffer = 0;
 volatile static uint8_t start_flag = 0;
-volatile uint8_t uart_wait_flag = 0;
-//volatile uint16_t adc_dma_buffer[3]; // x-, y- distance sensor, CRR
-//volatile uint32_t adc_buf_iterator = 0;
 volatile uint16_t line_counter = 0;
+
+volatile uint8_t new_data_flag = 0;
+
+extern uint8_t UserRxBufferFS[APP_RX_DATA_SIZE];
+
+volatile Device_t device;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -87,6 +88,8 @@ static void convert_buffers(uint16_t *in_data, uint8_t *out_data,
 //static uint8_t _check_SD_status(FIL *file, char *file_name);
 static uint8_t _write_data_SD(char *file_name, uint8_t *data, uint16_t length);
 
+//static void _setSettings();
+
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -94,69 +97,87 @@ static uint8_t _write_data_SD(char *file_name, uint8_t *data, uint16_t length);
 /* USER CODE END 0 */
 
 /**
-  * @brief  The application entry point.
-  * @retval int
-  */
-int main(void)
-{
-  /* USER CODE BEGIN 1 */
-  /* USER CODE END 1 */
-  
+ * @brief  The application entry point.
+ * @retval int
+ */
+int main(void) {
+	/* USER CODE BEGIN 1 */
+	/* USER CODE END 1 */
 
-  /* Enable I-Cache---------------------------------------------------------*/
-  SCB_EnableICache();
+	/* Enable I-Cache---------------------------------------------------------*/
+	SCB_EnableICache();
 
-  /* Enable D-Cache---------------------------------------------------------*/
-  SCB_EnableDCache();
+	/* Enable D-Cache---------------------------------------------------------*/
+	SCB_EnableDCache();
 
-  /* MCU Configuration--------------------------------------------------------*/
+	/* MCU Configuration--------------------------------------------------------*/
 
-  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
-  HAL_Init();
+	/* Reset of all peripherals, Initializes the Flash interface and the Systick. */
+	HAL_Init();
 
-  /* USER CODE BEGIN Init */
+	/* USER CODE BEGIN Init */
 
-  /* USER CODE END Init */
+	/* USER CODE END Init */
 
-  /* Configure the system clock */
-  SystemClock_Config();
+	/* Configure the system clock */
+	SystemClock_Config();
 
-  /* USER CODE BEGIN SysInit */
+	/* USER CODE BEGIN SysInit */
 
-  /* USER CODE END SysInit */
+	/* USER CODE END SysInit */
 
-  /* Initialize all configured peripherals */
-  MX_GPIO_Init();
-  MX_ADC1_Init();
-  MX_CRC_Init();
-  MX_SDMMC1_SD_Init();
-  MX_FATFS_Init();
-  MX_USART2_UART_Init();
-  MX_ADC3_Init();
-  MX_USB_DEVICE_Init();
-  /* USER CODE BEGIN 2 */
-  /* USER CODE END 2 */
- 
- 
+	/* Initialize all configured peripherals */
+	MX_GPIO_Init();
+	MX_ADC1_Init();
+	MX_CRC_Init();
+	MX_SDMMC1_SD_Init();
+	MX_FATFS_Init();
+	MX_ADC3_Init();
+	MX_USB_DEVICE_Init();
+	/* USER CODE BEGIN 2 */
+	/* USER CODE END 2 */
 
-  /* Infinite loop */
-  /* USER CODE BEGIN WHILE */
+	/* Infinite loop */
+	/* USER CODE BEGIN WHILE */
 	FATFS fs;
-
-//	uint8_t rx_foo[3];
-//	HAL_UART_Receive_IT(&huart2, rx_foo, 3);
 	uint32_t measurements_counter = 0;
 	f_mount(&fs, "", 0);
 
+	//default settings for device
+	device.action = ACTION_STOP;
+	device.settings.sd_card_record = 1;
+	device.settings.dis_sens_count = 4;
+	device.settings.t_sens_count = 2;
+	device.settings.time_interval = 10;
+
 	while (1) {
+		if (new_data_flag) {
+			new_data_flag = 0;
+			switch (device.action) {
+			case ACTION_RUN:
+				start_flag = 1;
+				break;
+			case ACTION_STOP:
+				start_flag = 0;
+				break;
+			case ACTION_GET:
+				if (device.sub_action == ACTION_DATA) {
+					start_flag = 1;
+				} else if (device.sub_action == ACTION_SETTINGS) {
+
+				}
+				break;
+			case ACTION_SET:
+
+				break;
+			}
+		}
 		if (start_flag) {
-			start_flag = 0;
+			if ((device.action == ACTION_GET) && (device.sub_action == ACTION_DATA))
+				start_flag = 0;
 			measurements_counter = 0;
 			HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
 			HAL_ADC_Start_IT(&hadc1);
-//			uint8_t rx_foo2[3];
-//			HAL_UART_Receive_IT(&huart2, rx_foo2, 3);
-
 		}
 		if (adc_ready_conversion) {
 			adc_ready_conversion = 0;
@@ -172,9 +193,9 @@ int main(void)
 //						temp_buff[i] = adc_buffer[k * m + i];
 //					filter(temp_buff, degree, m);
 //				}
-    /* USER CODE END WHILE */
+				/* USER CODE END WHILE */
 
-    /* USER CODE BEGIN 3 */
+				/* USER CODE BEGIN 3 */
 				convert_buffers((uint16_t*) adc_buffer, tx_buffer,
 				SAMPLES_COUNT);
 //				uint8_t ai_waiting_error_counter = 0;
@@ -197,30 +218,22 @@ int main(void)
 //				_append_EOS((char*) tx_buffer, sizeof(tx_buffer), 2);
 //				_append_EOS((char*) tx_buffer, sizeof(tx_buffer), 0); //for Matlab connection
 //				f_printf(&file, (TCHAR*) tx_buffer);
-				if (_write_data_SD(FILE_NAME, tx_buffer,
-						SAMPLES_COUNT * sizeof(uint16_t)) != HAL_OK) {
+				if ((device.settings.sd_card_record == 1)
+						|| (device.settings.sd_card_record == 3)) {
+					if (_write_data_SD(FILE_NAME, tx_buffer,
+					SAMPLES_COUNT * sizeof(uint16_t)) != HAL_OK) {
+						Error_Handler();
+					}
+				}
+
+				if (CDC_Transmit_FS(tx_buffer, SAMPLES_COUNT * sizeof(uint16_t))
+						!= USBD_OK) {
 					Error_Handler();
 				}
 
-				if(CDC_Transmit_FS(tx_buffer, SAMPLES_COUNT * sizeof(uint16_t)) != USBD_OK){
-					Error_Handler();
-				}
-
-//				uart_wait_flag = 1;
-//				HAL_UART_Transmit_IT(&huart2, tx_buffer,
-//				SAMPLES_COUNT * sizeof(uint16_t));
 				if (HAL_ADC_Start_IT(&hadc1) != HAL_OK) {
 					Error_Handler();
 				}
-//				uint8_t uart_error_counter = 0;
-//				while (uart_wait_flag) {
-//					HAL_Delay(1);
-//					if (uart_error_counter > 20) {
-//						Error_Handler();
-//						break;
-//					} else
-//						uart_error_counter++;
-//				}
 				free(tx_buffer);
 			} else {
 				HAL_ADC_Stop_IT(&hadc1);
@@ -237,70 +250,65 @@ int main(void)
 //				start_ticks = __HAL_TIM_GET_COUNTER(&htim6);
 				//GET ELAPSED TIME OF ONE FRAME
 			}
+			HAL_Delay(device.settings.time_interval);
 		}
 	}
-  /* USER CODE END 3 */
+	/* USER CODE END 3 */
 }
 
 /**
-  * @brief System Clock Configuration
-  * @retval None
-  */
-void SystemClock_Config(void)
-{
-  RCC_OscInitTypeDef RCC_OscInitStruct = {0};
-  RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
-  RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = {0};
+ * @brief System Clock Configuration
+ * @retval None
+ */
+void SystemClock_Config(void) {
+	RCC_OscInitTypeDef RCC_OscInitStruct = { 0 };
+	RCC_ClkInitTypeDef RCC_ClkInitStruct = { 0 };
+	RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = { 0 };
 
-  /** Configure LSE Drive Capability 
-  */
-  HAL_PWR_EnableBkUpAccess();
-  /** Configure the main internal regulator output voltage 
-  */
-  __HAL_RCC_PWR_CLK_ENABLE();
-  __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
-  /** Initializes the CPU, AHB and APB busses clocks 
-  */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
-  RCC_OscInitStruct.HSEState = RCC_HSE_BYPASS;
-  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
-  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
-  RCC_OscInitStruct.PLL.PLLM = 4;
-  RCC_OscInitStruct.PLL.PLLN = 216;
-  RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
-  RCC_OscInitStruct.PLL.PLLQ = 9;
-  if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /** Activate the Over-Drive mode 
-  */
-  if (HAL_PWREx_EnableOverDrive() != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /** Initializes the CPU, AHB and APB busses clocks 
-  */
-  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
-                              |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
-  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
-  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
-  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV4;
-  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV8;
+	/** Configure LSE Drive Capability
+	 */
+	HAL_PWR_EnableBkUpAccess();
+	/** Configure the main internal regulator output voltage
+	 */
+	__HAL_RCC_PWR_CLK_ENABLE();
+	__HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
+	/** Initializes the CPU, AHB and APB busses clocks
+	 */
+	RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
+	RCC_OscInitStruct.HSEState = RCC_HSE_BYPASS;
+	RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+	RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
+	RCC_OscInitStruct.PLL.PLLM = 4;
+	RCC_OscInitStruct.PLL.PLLN = 216;
+	RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
+	RCC_OscInitStruct.PLL.PLLQ = 9;
+	if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK) {
+		Error_Handler();
+	}
+	/** Activate the Over-Drive mode
+	 */
+	if (HAL_PWREx_EnableOverDrive() != HAL_OK) {
+		Error_Handler();
+	}
+	/** Initializes the CPU, AHB and APB busses clocks
+	 */
+	RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK
+			| RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;
+	RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
+	RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
+	RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV4;
+	RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV8;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_7) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_USART2|RCC_PERIPHCLK_SDMMC1
-                              |RCC_PERIPHCLK_CLK48;
-  PeriphClkInitStruct.Usart2ClockSelection = RCC_USART2CLKSOURCE_PCLK1;
-  PeriphClkInitStruct.Clk48ClockSelection = RCC_CLK48SOURCE_PLL;
-  PeriphClkInitStruct.Sdmmc1ClockSelection = RCC_SDMMC1CLKSOURCE_CLK48;
-  if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
-  {
-    Error_Handler();
-  }
+	if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_7) != HAL_OK) {
+		Error_Handler();
+	}
+	PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_SDMMC1
+			| RCC_PERIPHCLK_CLK48;
+	PeriphClkInitStruct.Clk48ClockSelection = RCC_CLK48SOURCE_PLL;
+	PeriphClkInitStruct.Sdmmc1ClockSelection = RCC_SDMMC1CLKSOURCE_CLK48;
+	if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK) {
+		Error_Handler();
+	}
 }
 
 /* USER CODE BEGIN 4 */
@@ -403,11 +411,6 @@ static void convert_buffers(uint16_t *in_data, uint8_t *out_data,
 		++j;
 		out_data[j] = temp;
 		++j;
-//		uint8_t * temp = (uint8_t *)(&in_data[i]);
-//		for (uint8_t j = sizeof(temp); j > 0; j--){
-//			out_data[i] = temp[j];
-//			i++;
-//		}
 	}
 }
 
@@ -521,37 +524,29 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc) {
 	}
 }
 
-void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart) {
-	if (huart->Instance == huart2.Instance) {
-		uart_wait_flag = 0;
-	}
-}
-
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
-	if (huart->Instance == huart2.Instance) {
-		start_flag = 1;
-	}
-}
-
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 	if (GPIO_Pin == USER_Btn_Pin) {
-		start_flag = 1;
+//		start_flag = 1;
+		new_data_flag = 1;
+		if (device.action == ACTION_STOP)
+			device.action = ACTION_RUN;
+		else if (device.action == ACTION_RUN)
+			device.action = ACTION_STOP;
 	}
 }
 
 /* USER CODE END 4 */
 
 /**
-  * @brief  This function is executed in case of error occurrence.
-  * @retval None
-  */
-void Error_Handler(void)
-{
-  /* USER CODE BEGIN Error_Handler_Debug */
+ * @brief  This function is executed in case of error occurrence.
+ * @retval None
+ */
+void Error_Handler(void) {
+	/* USER CODE BEGIN Error_Handler_Debug */
 
 	HAL_GPIO_WritePin(LD1_GPIO_Port, LD1_Pin, GPIO_PIN_SET);
 
-  /* USER CODE END Error_Handler_Debug */
+	/* USER CODE END Error_Handler_Debug */
 }
 
 #ifdef  USE_FULL_ASSERT
