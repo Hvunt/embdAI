@@ -513,15 +513,34 @@ static void convert_buffers(uint16_t *in_data, uint8_t *out_data,
 
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc) {
 	if (hadc->Instance == hadc1.Instance) {
-		if (adc_buffer_counter < SAMPLES_COUNT) {
-			adc_buffer[adc_buffer_counter] = HAL_ADC_GetValue(&hadc1);// * ADC_CONVERSION;
-			adc_buffer_counter++;
-			HAL_ADC_Start_IT(&hadc1);
-		} else {
-			adc_ready_conversion = 1;
-			adc_buffer_counter = 0;
+			if (adc_buffer_counter < SAMPLES_COUNT) {
+				adc_buffer[adc_buffer_counter] = HAL_ADC_GetValue(&hadc1);// * ADC_CONVERSION;
+				adc_buffer_counter++;
+				if ((adc_buffer_counter) % 3 == 0) {
+					HAL_ADC_Stop_IT(&hadc1);
+					HAL_ADC_Start_IT(&hadc3);
+
+				} else {
+					HAL_ADC_Start_IT(&hadc1);
+				}
+			} else {
+				adc_ready_conversion = 1;
+				adc_buffer_counter = 0;
+			}
 		}
-	}
+		if (hadc->Instance == hadc3.Instance) {
+			if (adc_buffer_counter < SAMPLES_COUNT) {
+				adc_buffer[adc_buffer_counter] = HAL_ADC_GetValue(&hadc3);// * ADC_CONVERSION;
+				adc_buffer_counter++;
+				if ((adc_buffer_counter) % 3 == 0) {
+					HAL_ADC_Stop_IT(&hadc3);
+					HAL_ADC_Start_IT(&hadc1);
+				}
+			} else {
+				adc_ready_conversion = 1;
+				adc_buffer_counter = 0;
+			}
+		}
 }
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
