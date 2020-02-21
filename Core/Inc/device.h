@@ -5,6 +5,8 @@
  *      Author: hvunt
  */
 
+#include <stdint.h>
+
 #ifndef INC_DEVICE_H_
 #define INC_DEVICE_H_
 
@@ -37,6 +39,8 @@ typedef struct DeviceSettings{
 
 typedef struct Device{
 //	DeviceSettings_t settings;
+
+	uint16_t data;					//data for settings
 	uint8_t setting;				//if GET SETTINGS
 	uint8_t sub_action;				// DATA OR SETTINGS
 	uint8_t action;					// RUN / STOP / GET / SET

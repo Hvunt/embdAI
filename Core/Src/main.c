@@ -140,10 +140,10 @@ int main(void)
 
 	//default settings for device
 	device.action = ACTION_STOP;
-	device.settings.sd_card_record = SD_CARD_RECORD_ALL;
-	device.settings.dis_sens_count = 4;
-	device.settings.t_sens_count = 2;
-	device.settings.time_interval = 100;
+	deviceSettings.sd_card_record = SD_CARD_RECORD_ALL;
+	deviceSettings.dis_sens_count = 4;
+	deviceSettings.t_sens_count = 2;
+	deviceSettings.time_interval = 100;
 
 	while (1) {
 		if (new_data_flag) {
@@ -159,14 +159,16 @@ int main(void)
 				if (device.sub_action == ACTION_DATA) {
 					start_flag = 1;
 				} else if (device.sub_action == ACTION_SETTINGS) {
-					uint16_t data = getSetting(&deviceSettings, device.setting);
-
-					CDC_Transmit_FS(data, sizeof(data));
+					uint16_t data = getSetting((DeviceSettings_t *)&deviceSettings, device.setting);
+					uint8_t temp[2] = {};
+					temp[0] = data << 8;
+					temp[1] = data;
+					CDC_Transmit_FS(temp, sizeof(temp));
 				}
 				break;
 			case ACTION_SET:
-				uint16 data = device.setting;
 
+				setSettings((DeviceSettings_t *)&deviceSettings, device.setting, device.data);
 				break;
 			}
 		}
@@ -195,8 +197,8 @@ int main(void)
 					Error_Handler();
 				}
 
-				if ((device.settings.sd_card_record == 1)
-						|| (device.settings.sd_card_record == 3)) {
+				if ((deviceSettings.sd_card_record == SD_CARD_RECORD_ALL)
+						|| (deviceSettings.sd_card_record == SD_CARD_RECORD_GET)) {
 					if (_write_data_SD(FILE_NAME, tx_buffer,
 					SAMPLES_COUNT * sizeof(uint16_t)) != HAL_OK) {
 						Error_Handler();
@@ -281,7 +283,7 @@ void SystemClock_Config(void)
 /* USER CODE BEGIN 4 */
 static void _us_delay() {
 	TIM6->SR = 0;
-	TIM6->ARR = device.settings.time_interval;
+	TIM6->ARR = deviceSettings.time_interval;
 	TIM6->PSC = 108 - 1;
 	TIM6->CR1 |= TIM_CR1_CEN;
 	while (!(TIM6->SR & TIM_SR_UIF))
