@@ -24,6 +24,7 @@
 #include "crc.h"
 #include "fatfs.h"
 #include "sdmmc.h"
+#include "tim.h"
 #include "usb_device.h"
 #include "gpio.h"
 
@@ -89,7 +90,7 @@ static void convert_buffers(uint16_t *in_data, uint8_t *out_data,
 static uint8_t _write_data_SD(char *file_name, uint8_t *data, uint16_t length);
 
 //static void _setSettings();
-
+static void _us_delay();
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -133,8 +134,10 @@ int main(void) {
 	MX_SDMMC1_SD_Init();
 	MX_FATFS_Init();
 	MX_ADC3_Init();
+	MX_TIM6_Init();
 	MX_USB_DEVICE_Init();
 	/* USER CODE BEGIN 2 */
+
 	/* USER CODE END 2 */
 
 	/* Infinite loop */
@@ -148,7 +151,7 @@ int main(void) {
 	device.settings.sd_card_record = 1;
 	device.settings.dis_sens_count = 4;
 	device.settings.t_sens_count = 2;
-	device.settings.time_interval = 10;
+	device.settings.time_interval = 100;
 
 	while (1) {
 		if (new_data_flag) {
@@ -173,7 +176,8 @@ int main(void) {
 			}
 		}
 		if (start_flag) {
-			if ((device.action == ACTION_GET) && (device.sub_action == ACTION_DATA))
+			if ((device.action == ACTION_GET)
+					&& (device.sub_action == ACTION_DATA))
 				start_flag = 0;
 			measurements_counter = 0;
 			HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
@@ -250,7 +254,8 @@ int main(void) {
 //				start_ticks = __HAL_TIM_GET_COUNTER(&htim6);
 				//GET ELAPSED TIME OF ONE FRAME
 			}
-			HAL_Delay(device.settings.time_interval);
+			_us_delay();
+//			HAL_Delay(device.settings.time_interval);
 		}
 	}
 	/* USER CODE END 3 */
@@ -312,6 +317,14 @@ void SystemClock_Config(void) {
 }
 
 /* USER CODE BEGIN 4 */
+static void _us_delay() {
+	TIM6->SR = 0;
+	TIM6->ARR = device.settings.time_interval;
+	TIM6->PSC = 108 - 1;
+	TIM6->CR1 |= TIM_CR1_CEN;
+	while (!(TIM6->SR & TIM_SR_UIF))
+		;
+}
 
 static uint8_t _write_data_SD(char *file_name, uint8_t *data, uint16_t length) {
 	FIL file;
