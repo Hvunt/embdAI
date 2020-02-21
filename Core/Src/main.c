@@ -67,6 +67,8 @@ volatile uint8_t new_data_flag = 0;
 extern uint8_t UserRxBufferFS[APP_RX_DATA_SIZE];
 
 volatile Device_t device;
+volatile DeviceSettings_t deviceSettings;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -138,7 +140,7 @@ int main(void)
 
 	//default settings for device
 	device.action = ACTION_STOP;
-	device.settings.sd_card_record = 1;
+	device.settings.sd_card_record = SD_CARD_RECORD_ALL;
 	device.settings.dis_sens_count = 4;
 	device.settings.t_sens_count = 2;
 	device.settings.time_interval = 100;
@@ -157,10 +159,13 @@ int main(void)
 				if (device.sub_action == ACTION_DATA) {
 					start_flag = 1;
 				} else if (device.sub_action == ACTION_SETTINGS) {
+					uint16_t data = getSetting(&deviceSettings, device.setting);
 
+					CDC_Transmit_FS(data, sizeof(data));
 				}
 				break;
 			case ACTION_SET:
+				uint16 data = device.setting;
 
 				break;
 			}
@@ -185,6 +190,11 @@ int main(void)
 				convert_buffers((uint16_t*) adc_buffer, tx_buffer,
 				SAMPLES_COUNT);
 
+				if (CDC_Transmit_FS(tx_buffer, SAMPLES_COUNT * sizeof(uint16_t))
+						!= USBD_OK) {
+					Error_Handler();
+				}
+
 				if ((device.settings.sd_card_record == 1)
 						|| (device.settings.sd_card_record == 3)) {
 					if (_write_data_SD(FILE_NAME, tx_buffer,
@@ -193,17 +203,13 @@ int main(void)
 					}
 				}
 
-				if (CDC_Transmit_FS(tx_buffer, SAMPLES_COUNT * sizeof(uint16_t))
-						!= USBD_OK) {
-					Error_Handler();
-				}
-
 				if (HAL_ADC_Start_IT(&hadc1) != HAL_OK) {
 					Error_Handler();
 				}
 				free(tx_buffer);
 			} else {
 				HAL_ADC_Stop_IT(&hadc1);
+				HAL_ADC_Stop_IT(&hadc3);
 				measurements_counter = 0;
 				HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
 			}
@@ -346,7 +352,7 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc) {
 		if (adc_buffer_counter < SAMPLES_COUNT) {
 			adc_buffer[adc_buffer_counter] = HAL_ADC_GetValue(&hadc1); // * ADC_CONVERSION;
 			adc_buffer_counter++;
-			if ((adc_buffer_counter) % 3 == 0) {
+			if ((adc_buffer_counter) % 2 == 0) {
 				HAL_ADC_Stop_IT(&hadc1);
 				HAL_ADC_Start_IT(&hadc3);
 
@@ -362,9 +368,11 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc) {
 		if (adc_buffer_counter < SAMPLES_COUNT) {
 			adc_buffer[adc_buffer_counter] = HAL_ADC_GetValue(&hadc3); // * ADC_CONVERSION;
 			adc_buffer_counter++;
-			if ((adc_buffer_counter) % 3 == 0) {
+			if ((adc_buffer_counter) % 2 == 0) {
 				HAL_ADC_Stop_IT(&hadc3);
 				HAL_ADC_Start_IT(&hadc1);
+			} else {
+				HAL_ADC_Start_IT(&hadc3);
 			}
 		} else {
 			adc_ready_conversion = 1;

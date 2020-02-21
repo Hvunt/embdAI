@@ -278,6 +278,7 @@ static int8_t CDC_Receive_FS(uint8_t* Buf, uint32_t *Len)
 			device.sub_action = ACTION_DATA;
 		} else if(UserRxBufferFS[1] == ACTION_SETTINGS){
 			device.sub_action = ACTION_SETTINGS;
+
 		}
 
 	} else if (UserRxBufferFS[0] == ACTION_SET) {
