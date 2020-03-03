@@ -46,7 +46,8 @@ typedef struct Device{
 	uint8_t action;					// RUN / STOP / GET / SET
 } Device_t;
 
-uint16_t getSetting(DeviceSettings_t * device, uint8_t Reg);
-void setSettings(DeviceSettings_t * device, uint8_t Reg, uint16_t data);
+void deviceSettingsInit(DeviceSettings_t *deviceSettings);
+uint16_t deviceGetSetting(DeviceSettings_t * device, uint8_t Reg);
+void deviceSetSettings(DeviceSettings_t * device, uint8_t Reg, uint16_t data);
 
 #endif /* INC_DEVICE_H_ */

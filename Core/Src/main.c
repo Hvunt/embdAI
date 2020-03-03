@@ -134,10 +134,7 @@ int main(void) {
 
 	//default settings for device
 	device.action = ACTION_STOP;
-	deviceSettings.sd_card_record = SD_CARD_RECORD_ALL;
-	deviceSettings.dis_sens_count = 4;
-	deviceSettings.t_sens_count = 2;
-	deviceSettings.time_interval = 100;
+	deviceSettingsInit(deviceSettings);
 
 	while (1) {
 		if (new_data_flag) {
@@ -153,7 +150,7 @@ int main(void) {
 				if (device.sub_action == ACTION_DATA) {
 					start_flag = 1;
 				} else if (device.sub_action == ACTION_SETTINGS) {
-					uint16_t data = getSetting(
+					uint16_t data = deviceGetSetting(
 							(DeviceSettings_t*) &deviceSettings,
 							device.setting);
 					uint8_t temp[2] = { };
@@ -164,7 +161,7 @@ int main(void) {
 				break;
 			case ACTION_SET:
 
-				setSettings((DeviceSettings_t*) &deviceSettings, device.setting,
+				deviceSetSettings((DeviceSettings_t*) &deviceSettings, device.setting,
 						device.data);
 				break;
 			}
@@ -326,6 +323,7 @@ static uint8_t _write_data_SD(char *file_name, uint8_t *data, uint16_t length) {
 		return HAL_ERROR;
 	}
 
+	//add number of the samples
 	uint8_t temp[2] = { line_counter >> 8, line_counter };
 	fr = f_write(&file, temp, sizeof(temp), &bw);
 	if (fr != FR_OK) {
@@ -335,6 +333,7 @@ static uint8_t _write_data_SD(char *file_name, uint8_t *data, uint16_t length) {
 	f_sync(&file);
 	line_counter++;
 
+	//add samples data
 	fr = f_write(&file, data, length, &bw);
 	if (fr != FR_OK) {
 		f_close(&file);
@@ -343,6 +342,7 @@ static uint8_t _write_data_SD(char *file_name, uint8_t *data, uint16_t length) {
 	f_sync(&file);
 	HAL_Delay(1);
 
+	//add divider of the line
 	uint16_t divider = 0xFFFF;
 	fr = f_write(&file, &divider, sizeof(divider), &bw);
 	if (fr != FR_OK) {
