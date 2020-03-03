@@ -49,7 +49,7 @@
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
-#define STRING_VALUE_DIVIDER ('_')
+//#define STRING_VALUE_DIVIDER ('_')
 
 /* USER CODE END PM */
 
@@ -63,7 +63,7 @@ volatile uint16_t line_counter = 0;
 
 volatile uint8_t new_data_flag = 0;
 
-volatile Device_t device;
+volatile DeviceAction_t deviceAction;
 volatile DeviceSettings_t deviceSettings;
 /* USER CODE END PV */
 
@@ -133,13 +133,13 @@ int main(void) {
 	f_mount(&fs, "", 0);
 
 	//default settings for device
-	device.action = ACTION_STOP;
-	deviceSettingsInit(deviceSettings);
+	deviceAction.action = ACTION_STOP;
+	deviceSettingsInit((DeviceSettings_t *) &deviceSettings);
 
 	while (1) {
 		if (new_data_flag) {
 			new_data_flag = 0;
-			switch (device.action) {
+			switch (deviceAction.action) {
 			case ACTION_RUN:
 				start_flag = 1;
 				break;
@@ -147,12 +147,12 @@ int main(void) {
 				start_flag = 0;
 				break;
 			case ACTION_GET:
-				if (device.sub_action == ACTION_DATA) {
+				if (deviceAction.sub_action == ACTION_DATA) {
 					start_flag = 1;
-				} else if (device.sub_action == ACTION_SETTINGS) {
+				} else if (deviceAction.sub_action == ACTION_SETTINGS) {
 					uint16_t data = deviceGetSetting(
 							(DeviceSettings_t*) &deviceSettings,
-							device.setting);
+							deviceAction.setting);
 					uint8_t temp[2] = { };
 					temp[0] = data >> 8;
 					temp[1] = data;
@@ -161,14 +161,14 @@ int main(void) {
 				break;
 			case ACTION_SET:
 
-				deviceSetSettings((DeviceSettings_t*) &deviceSettings, device.setting,
-						device.data);
+				deviceSetSettings((DeviceSettings_t*) &deviceSettings, deviceAction.setting,
+						deviceAction.data);
 				break;
 			}
 		}
 		if (start_flag) {
-			if ((device.action == ACTION_GET)
-					&& (device.sub_action == ACTION_DATA))
+			if ((deviceAction.action == ACTION_GET)
+					&& (deviceAction.sub_action == ACTION_DATA))
 				start_flag = 0;
 			HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
 			_read_adc();
@@ -369,10 +369,10 @@ static void convert_buffers(uint16_t *in_data, uint8_t *out_data,
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 	if (GPIO_Pin == USER_Btn_Pin) {
 		new_data_flag = 1;
-		if (device.action == ACTION_STOP)
-			device.action = ACTION_RUN;
-		else if (device.action == ACTION_RUN)
-			device.action = ACTION_STOP;
+		if (deviceAction.action == ACTION_STOP)
+			deviceAction.action = ACTION_RUN;
+		else if (deviceAction.action == ACTION_RUN)
+			deviceAction.action = ACTION_STOP;
 	}
 }
 

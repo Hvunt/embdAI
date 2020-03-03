@@ -266,27 +266,27 @@ static int8_t CDC_Receive_FS(uint8_t* Buf, uint32_t *Len)
 
 	//parsing input data
 	if (UserRxBufferFS[0] == ACTION_RUN) {
-		device.action = ACTION_RUN;
+		deviceAction.action = ACTION_RUN;
 
 	} else if (UserRxBufferFS[0] == ACTION_STOP) {
-		device.action = ACTION_STOP;
+		deviceAction.action = ACTION_STOP;
 
 	} else if (UserRxBufferFS[0] == ACTION_GET) {
-		device.action = ACTION_GET;
+		deviceAction.action = ACTION_GET;
 
 		if (UserRxBufferFS[1] == ACTION_DATA) {
-			device.sub_action = ACTION_DATA;
+			deviceAction.sub_action = ACTION_DATA;
 		} else if (UserRxBufferFS[1] == ACTION_SETTINGS) {
-			device.sub_action = ACTION_SETTINGS;
-			device.setting = UserRxBufferFS[2];
+			deviceAction.sub_action = ACTION_SETTINGS;
+			deviceAction.setting = UserRxBufferFS[2];
 		}
 
 	} else if (UserRxBufferFS[0] == ACTION_SET) {
-		device.action = ACTION_SET;
+		deviceAction.action = ACTION_SET;
 		if (UserRxBufferFS[1] == ACTION_SETTINGS) {
-			device.sub_action = ACTION_SETTINGS;
-			device.setting = UserRxBufferFS[2];
-			device.data = (UserRxBufferFS[3] << 8) | (UserRxBufferFS[4] );
+			deviceAction.sub_action = ACTION_SETTINGS;
+			deviceAction.setting = UserRxBufferFS[2];
+			deviceAction.data = (UserRxBufferFS[3] << 8) | (UserRxBufferFS[4] );
 		}
 	}
 

@@ -37,14 +37,12 @@ typedef struct DeviceSettings{
 	uint8_t sd_card_record;			//0..3
 } DeviceSettings_t;
 
-typedef struct Device{
-//	DeviceSettings_t settings;
-
+typedef struct DeviceAction{
 	uint16_t data;					//data for settings
 	uint8_t setting;				//if GET SETTINGS
 	uint8_t sub_action;				// DATA OR SETTINGS
 	uint8_t action;					// RUN / STOP / GET / SET
-} Device_t;
+} DeviceAction_t;
 
 void deviceSettingsInit(DeviceSettings_t *deviceSettings);
 uint16_t deviceGetSetting(DeviceSettings_t * device, uint8_t Reg);

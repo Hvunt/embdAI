@@ -92,7 +92,7 @@
 extern USBD_CDC_ItfTypeDef USBD_Interface_fops_FS;
 
 /* USER CODE BEGIN EXPORTED_VARIABLES */
-extern volatile Device_t device;
+extern volatile DeviceAction_t deviceAction;
 extern volatile uint8_t new_data_flag;
 /* USER CODE END EXPORTED_VARIABLES */
 
