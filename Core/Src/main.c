@@ -57,20 +57,14 @@
 
 /* USER CODE BEGIN PV */
 volatile uint16_t adc_buffer[SAMPLES_COUNT] = { 0 };
-volatile uint8_t adc_ready_conversion = 0;
-volatile uint32_t adc_buffer_counter = 0;
-volatile uint8_t adc_module_counter = 0;
 
 volatile static uint8_t start_flag = 0;
 volatile uint16_t line_counter = 0;
 
 volatile uint8_t new_data_flag = 0;
 
-extern uint8_t UserRxBufferFS[APP_RX_DATA_SIZE];
-
 volatile Device_t device;
 volatile DeviceSettings_t deviceSettings;
-
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -136,7 +130,6 @@ int main(void) {
 	/* Infinite loop */
 	/* USER CODE BEGIN WHILE */
 	FATFS fs;
-	uint32_t measurements_counter = 0;
 	f_mount(&fs, "", 0);
 
 	//default settings for device
@@ -180,9 +173,6 @@ int main(void) {
 			if ((device.action == ACTION_GET)
 					&& (device.sub_action == ACTION_DATA))
 				start_flag = 0;
-//			measurements_counter = 0;
-//			HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
-//			HAL_ADC_Start_IT(&hadc1);
 			HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
 			_read_adc();
 			uint8_t *tx_buffer = malloc(SAMPLES_COUNT * sizeof(uint16_t));
@@ -207,50 +197,11 @@ int main(void) {
 
 			HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
 		}
-		if (adc_ready_conversion) {
-//			adc_ready_conversion = 0;
-//			if (measurements_counter < FRAMES_COUNT) {
-//				measurements_counter++;
-//				uint8_t *tx_buffer = malloc(SAMPLES_COUNT * sizeof(uint16_t));
 
-			/* USER CODE END WHILE */
-
-			/* USER CODE BEGIN 3 */
-//				convert_buffers((uint16_t*) adc_buffer, tx_buffer,
-//				SAMPLES_COUNT);
-//
-//				if (CDC_Transmit_FS(tx_buffer, SAMPLES_COUNT * sizeof(uint16_t))
-//						!= USBD_OK) {
-//					Error_Handler();
-//				}
-//
-//				if ((deviceSettings.sd_card_record == SD_CARD_RECORD_ALL)
-//						|| (deviceSettings.sd_card_record == SD_CARD_RECORD_GET)) {
-//					if (_write_data_SD(FILE_NAME, tx_buffer,
-//					SAMPLES_COUNT * sizeof(uint16_t)) != HAL_OK) {
-//						Error_Handler();
-//					}
-//				}
-//
-//				free(tx_buffer);
-//				_clear_adc_buffer();
-//				ersion) {
-//				//			adc_ready_conversion = 0;
-//				//			if (measurements_counter < FRAMES_COUNT) {
-//				//				measurements_counter++;
-//				//				uint8_t *t
-//				if (HAL_ADC_Start_IT(&hadc1) != HAL_OK) {
-//					Error_Handler();
-//				}
-//
-//			} else {
-//				HAL_ADC_Stop_IT(&hadc1);
-//				HAL_ADC_Stop_IT(&hadc3);
-//				measurements_counter = 0;
-//				HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
-//			}
-		}
 		_us_delay(deviceSettings.time_interval);
+		/* USER CODE END WHILE */
+
+		/* USER CODE BEGIN 3 */
 	}
 	/* USER CODE END 3 */
 }
@@ -413,42 +364,6 @@ static void convert_buffers(uint16_t *in_data, uint8_t *out_data,
 		out_data[j] = temp;
 		++j;
 	}
-}
-
-void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc) {
-//	if (hadc->Instance == hadc1.Instance) {
-//		if (adc_buffer_counter < SAMPLES_COUNT) {
-//			adc_buffer[adc_buffer_counter] = HAL_ADC_GetValue(&hadc1); // * ADC_CONVERSION;
-//			adc_buffer_counter++;
-//			if (adc_module_counter > 3) {
-//				adc_module_counter = 0;
-//				HAL_ADC_Stop_IT(&hadc1);
-//				HAL_ADC_Start_IT(&hadc3);
-//
-//			} else {
-//				adc_module_counter++;
-//				HAL_ADC_Start_IT(&hadc1);
-//			}
-//
-//		} /*else {
-//			adc_ready_conversion = 1;
-//			adc_buffer_counter = 0;
-//		}*/
-//	} else if (hadc->Instance == hadc3.Instance) {
-//		if (adc_buffer_counter < SAMPLES_COUNT) {
-//			adc_buffer[adc_buffer_counter] = HAL_ADC_GetValue(&hadc3); // * ADC_CONVERSION;
-//			adc_buffer_counter++;
-////			if ((adc_buffer_counter) % 2 == 0) {
-////				HAL_ADC_Stop_IT(&hadc3);
-////				HAL_ADC_Start_IT(&hadc1);
-////			} else {
-//				HAL_ADC_Start_IT(&hadc3);
-////			}
-//		} else {
-//			adc_ready_conversion = 1;
-//			adc_buffer_counter = 0;
-//		}
-//	}
 }
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
