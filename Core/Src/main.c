@@ -38,7 +38,6 @@
 /* USER CODE BEGIN Includes */
 #include <string.h>
 #include <math.h>
-#include "usbd_cdc_if.h"
 //#include "filter.h"
 #include "device.h"
 /* USER CODE END Includes */
@@ -172,13 +171,13 @@ int main(void)
 				if (deviceAction.sub_action == ACTION_DATA) {
 					start_flag = 1;
 				} else if (deviceAction.sub_action == ACTION_SETTINGS) {
-					uint16_t data = deviceGetSetting(
-							(DeviceSettings_t*) &deviceSettings,
-							deviceAction.setting);
-					uint8_t temp[2] = { };
-					temp[0] = data >> 8;
-					temp[1] = data;
-					CDC_Transmit_FS(temp, sizeof(temp));
+//					uint16_t data = deviceGetSetting(
+//							(DeviceSettings_t*) &deviceSettings,
+//							deviceAction.setting);
+//					uint8_t temp[2] = { };
+//					temp[0] = data >> 8;
+//					temp[1] = data;
+//					CDC_Transmit_FS(temp, sizeof(temp));
 				}
 				break;
 			case ACTION_SET:
@@ -194,15 +193,15 @@ int main(void)
 				start_flag = 0;
 			HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
 			_read_adc();
-			uint8_t *tx_buffer = malloc(SAMPLES_COUNT * sizeof(uint16_t));
-
+//			uint8_t *tx_buffer = malloc(SAMPLES_COUNT * sizeof(uint16_t));
+			uint8_t tx_buffer[100];
 			convert_buffers((uint16_t*) adc_buffer, tx_buffer,
 			SAMPLES_COUNT);
 
-			if (CDC_Transmit_FS(tx_buffer, SAMPLES_COUNT * sizeof(uint16_t))
-					!= USBD_OK) {
-				Error_Handler();
-			}
+//			if (CDC_Transmit_FS(tx_buffer, SAMPLES_COUNT * sizeof(uint16_t))
+//					!= USBD_OK) {
+//				Error_Handler();
+//			}
 			if ((deviceSettings.sd_card_record == SD_CARD_RECORD_ALL)
 					|| (deviceSettings.sd_card_record == SD_CARD_RECORD_GET)) {
 				if (_write_data_SD(FILE_NAME, tx_buffer,
@@ -211,7 +210,7 @@ int main(void)
 				}
 			}
 
-			free(tx_buffer);
+//			free(tx_buffer);
 			_clear_adc_buffer();
 
 			HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
@@ -297,17 +296,17 @@ void SystemClock_Config(void)
 
 static void _read_adc() {
 	for (uint32_t i = 0; i < SAMPLES_COUNT;) {
-		HAL_ADC_Start(&hadc1);
-		HAL_ADC_PollForConversion(&hadc1, 10);
-		adc_buffer[i] = HAL_ADC_GetValue(&hadc1);
+		HAL_ADC_Start(&hadc3);
+		HAL_ADC_PollForConversion(&hadc3, 10);
+		adc_buffer[i] = HAL_ADC_GetValue(&hadc3);
 		i++;
-		HAL_ADC_Start(&hadc1);
-		HAL_ADC_PollForConversion(&hadc1, 10);
-		adc_buffer[i] = HAL_ADC_GetValue(&hadc1);
+		HAL_ADC_Start(&hadc3);
+		HAL_ADC_PollForConversion(&hadc3, 10);
+		adc_buffer[i] = HAL_ADC_GetValue(&hadc3);
 		i++;
-		HAL_ADC_Start(&hadc1);
-		HAL_ADC_PollForConversion(&hadc1, 10);
-		adc_buffer[i] = HAL_ADC_GetValue(&hadc1);
+		HAL_ADC_Start(&hadc3);
+		HAL_ADC_PollForConversion(&hadc3, 10);
+		adc_buffer[i] = HAL_ADC_GetValue(&hadc3);
 		i++;
 		HAL_ADC_Start(&hadc3);
 		HAL_ADC_PollForConversion(&hadc3, 10);
