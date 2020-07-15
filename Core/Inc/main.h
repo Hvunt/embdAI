@@ -64,14 +64,38 @@ void Error_Handler(void);
 #define USER_Btn_Pin GPIO_PIN_13
 #define USER_Btn_GPIO_Port GPIOC
 #define USER_Btn_EXTI_IRQn EXTI15_10_IRQn
+#define EID_DC_Pin GPIO_PIN_4
+#define EID_DC_GPIO_Port GPIOA
 #define LD1_Pin GPIO_PIN_0
 #define LD1_GPIO_Port GPIOB
+#define EID_RST_Pin GPIO_PIN_12
+#define EID_RST_GPIO_Port GPIOF
+#define SPI_TCS2_Pin GPIO_PIN_8
+#define SPI_TCS2_GPIO_Port GPIOE
+#define SPI_TCS1_Pin GPIO_PIN_15
+#define SPI_TCS1_GPIO_Port GPIOE
 #define LD3_Pin GPIO_PIN_14
 #define LD3_GPIO_Port GPIOB
-#define SDMMC1_CD_Pin GPIO_PIN_9
-#define SDMMC1_CD_GPIO_Port GPIOC
+#define LED_STATUS_Pin GPIO_PIN_12
+#define LED_STATUS_GPIO_Port GPIOD
+#define LED_ERROR_Pin GPIO_PIN_13
+#define LED_ERROR_GPIO_Port GPIOD
+#define EID_CS_Pin GPIO_PIN_15
+#define EID_CS_GPIO_Port GPIOD
+#define SDMMC1_CD_Pin GPIO_PIN_2
+#define SDMMC1_CD_GPIO_Port GPIOG
+#define EID_CLK_Pin GPIO_PIN_3
+#define EID_CLK_GPIO_Port GPIOB
+#define EID_BUSY_Pin GPIO_PIN_4
+#define EID_BUSY_GPIO_Port GPIOB
+#define EID_DIN_Pin GPIO_PIN_5
+#define EID_DIN_GPIO_Port GPIOB
 #define LD2_Pin GPIO_PIN_7
 #define LD2_GPIO_Port GPIOB
+#define WIFI_RX_Pin GPIO_PIN_8
+#define WIFI_RX_GPIO_Port GPIOB
+#define WIFI_TX_Pin GPIO_PIN_9
+#define WIFI_TX_GPIO_Port GPIOB
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */
