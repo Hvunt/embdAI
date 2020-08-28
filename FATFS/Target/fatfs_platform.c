@@ -26,6 +26,6 @@ uint8_t	BSP_PlatformIsDetected(void) {
     }
     /* USER CODE BEGIN 1 */
 //    status = SD_PRESENT;
-    /* USER CODE END 1 */ 
+    /* USER CODE END 1 */
     return status;
-}  
+}

@@ -17,7 +17,6 @@
  ******************************************************************************
  */
 /* USER CODE END Header */
-
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "cmsis_os.h"
@@ -36,10 +35,10 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include <string.h>
-#include <math.h>
+//#include <string.h>
+//#include <math.h>
 //#include "filter.h"
-#include "device.h"
+//#include "device.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -49,7 +48,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define FILE_NAME "LOG.BIN"
+//#define FILE_NAME "LOG.BIN"
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -61,15 +60,15 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-volatile uint16_t adc_buffer[SAMPLES_COUNT] = { 0 };
-
-volatile static uint8_t start_flag = 0;
-volatile uint16_t line_counter = 0;
-
-volatile uint8_t new_data_flag = 0;
-
-volatile DeviceAction_t deviceAction;
-volatile DeviceSettings_t deviceSettings;
+//volatile uint16_t adc_buffer[SAMPLES_COUNT] = { 0 };
+//
+//volatile static uint8_t start_flag = 0;
+//volatile uint16_t line_counter = 0;
+//
+//volatile uint8_t new_data_flag = 0;
+//
+//volatile DeviceAction_t deviceAction;
+//volatile DeviceSettings_t deviceSettings;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -77,13 +76,13 @@ void SystemClock_Config(void);
 void MX_FREERTOS_Init(void);
 /* USER CODE BEGIN PFP */
 
-static void convert_buffers(uint16_t *in_data, uint8_t *out_data,
-		uint32_t input_buffer_size);
-static uint8_t _write_data_SD(char *file_name, uint8_t *data, uint16_t length);
-static void _us_delay(uint32_t delay);
-
-static void _read_adc();
-static void _clear_adc_buffer();
+//static void convert_buffers(uint16_t *in_data, uint8_t *out_data,
+//		uint32_t input_buffer_size);
+//static uint8_t _write_data_SD(char *file_name, uint8_t *data, uint16_t length);
+//static void _us_delay(uint32_t delay);
+//
+//static void _read_adc();
+//static void _clear_adc_buffer();
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -100,7 +99,7 @@ int main(void)
   /* USER CODE END 1 */
 
   /* Enable I-Cache---------------------------------------------------------*/
-  SCB_EnableICache();
+   SCB_EnableICache();
 
   /* Enable D-Cache---------------------------------------------------------*/
   SCB_EnableDCache();
@@ -134,8 +133,6 @@ int main(void)
   MX_TIM6_Init();
   MX_UART5_Init();
   MX_USART3_UART_Init();
-  /* Up to user define the empty MX_MBEDTLS_Init() function located in mbedtls.c file */
-  MX_IWDG_Init();
   MX_RTC_Init();
   /* USER CODE BEGIN 2 */
 
@@ -143,80 +140,80 @@ int main(void)
 
   /* Init scheduler */
   osKernelInitialize();  /* Call init function for freertos objects (in freertos.c) */
-  MX_FREERTOS_Init(); 
+  MX_FREERTOS_Init();
   /* Start scheduler */
   osKernelStart();
- 
+
   /* We should never get here as control is now taken by the scheduler */
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-	FATFS fs;
-	f_mount(&fs, "", 0);
-
-	//default settings for device
-	deviceAction.action = ACTION_STOP;
-	deviceSettingsInit((DeviceSettings_t *) &deviceSettings);
+//	FATFS fs;
+//	f_mount(&fs, "", 0);
+//
+//	//default settings for device
+//	deviceAction.action = ACTION_STOP;
+//	deviceSettingsInit((DeviceSettings_t *) &deviceSettings);
 
 	while (1) {
-		if (new_data_flag) {
-			new_data_flag = 0;
-			switch (deviceAction.action) {
-			case ACTION_RUN:
-				start_flag = 1;
-				break;
-			case ACTION_STOP:
-				start_flag = 0;
-				break;
-			case ACTION_GET:
-				if (deviceAction.sub_action == ACTION_DATA) {
-					start_flag = 1;
-				} else if (deviceAction.sub_action == ACTION_SETTINGS) {
-//					uint16_t data = deviceGetSetting(
-//							(DeviceSettings_t*) &deviceSettings,
-//							deviceAction.setting);
-//					uint8_t temp[2] = { };
-//					temp[0] = data >> 8;
-//					temp[1] = data;
-//					CDC_Transmit_FS(temp, sizeof(temp));
-				}
-				break;
-			case ACTION_SET:
-
-				deviceSetSettings((DeviceSettings_t*) &deviceSettings, deviceAction.setting,
-						deviceAction.data);
-				break;
-			}
-		}
-		if (start_flag) {
-			if ((deviceAction.action == ACTION_GET)
-					&& (deviceAction.sub_action == ACTION_DATA))
-				start_flag = 0;
-			HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
-			_read_adc();
-//			uint8_t *tx_buffer = malloc(SAMPLES_COUNT * sizeof(uint16_t));
-			uint8_t tx_buffer[100];
-			convert_buffers((uint16_t*) adc_buffer, tx_buffer,
-			SAMPLES_COUNT);
-
-//			if (CDC_Transmit_FS(tx_buffer, SAMPLES_COUNT * sizeof(uint16_t))
-//					!= USBD_OK) {
-//				Error_Handler();
+//		if (new_data_flag) {
+//			new_data_flag = 0;
+//			switch (deviceAction.action) {
+//			case ACTION_RUN:
+//				start_flag = 1;
+//				break;
+//			case ACTION_STOP:
+//				start_flag = 0;
+//				break;
+//			case ACTION_GET:
+//				if (deviceAction.sub_action == ACTION_DATA) {
+//					start_flag = 1;
+//				} else if (deviceAction.sub_action == ACTION_SETTINGS) {
+////					uint16_t data = deviceGetSetting(
+////							(DeviceSettings_t*) &deviceSettings,
+////							deviceAction.setting);
+////					uint8_t temp[2] = { };
+////					temp[0] = data >> 8;
+////					temp[1] = data;
+////					CDC_Transmit_FS(temp, sizeof(temp));
+//				}
+//				break;
+//			case ACTION_SET:
+//
+//				deviceSetSettings((DeviceSettings_t*) &deviceSettings, deviceAction.setting,
+//						deviceAction.data);
+//				break;
 //			}
-			if ((deviceSettings.sd_card_record == SD_CARD_RECORD_ALL)
-					|| (deviceSettings.sd_card_record == SD_CARD_RECORD_GET)) {
-				if (_write_data_SD(FILE_NAME, tx_buffer,
-				SAMPLES_COUNT * sizeof(uint16_t)) != HAL_OK) {
-					Error_Handler();
-				}
-			}
-
-//			free(tx_buffer);
-			_clear_adc_buffer();
-
-			HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
-		}
-
-		_us_delay(deviceSettings.time_interval);
+//		}
+//		if (start_flag) {
+//			if ((deviceAction.action == ACTION_GET)
+//					&& (deviceAction.sub_action == ACTION_DATA))
+//				start_flag = 0;
+//			HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
+//			_read_adc();
+////			uint8_t *tx_buffer = malloc(SAMPLES_COUNT * sizeof(uint16_t));
+//			uint8_t tx_buffer[100];
+//			convert_buffers((uint16_t*) adc_buffer, tx_buffer,
+//			SAMPLES_COUNT);
+//
+////			if (CDC_Transmit_FS(tx_buffer, SAMPLES_COUNT * sizeof(uint16_t))
+////					!= USBD_OK) {
+////				Error_Handler();
+////			}
+//			if ((deviceSettings.sd_card_record == SD_CARD_RECORD_ALL)
+//					|| (deviceSettings.sd_card_record == SD_CARD_RECORD_GET)) {
+//				if (_write_data_SD(FILE_NAME, tx_buffer,
+//				SAMPLES_COUNT * sizeof(uint16_t)) != HAL_OK) {
+//					Error_Handler();
+//				}
+//			}
+//
+////			free(tx_buffer);
+//			_clear_adc_buffer();
+//
+//			HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
+//		}
+//
+//		_us_delay(deviceSettings.time_interval);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -234,15 +231,16 @@ void SystemClock_Config(void)
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
   RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = {0};
 
-  /** Configure LSE Drive Capability 
+  /** Configure LSE Drive Capability
   */
   HAL_PWR_EnableBkUpAccess();
   __HAL_RCC_LSEDRIVE_CONFIG(RCC_LSEDRIVE_LOW);
-  /** Configure the main internal regulator output voltage 
+  /** Configure the main internal regulator output voltage
   */
   __HAL_RCC_PWR_CLK_ENABLE();
   __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
-  /** Initializes the CPU, AHB and APB busses clocks 
+  /** Initializes the RCC Oscillators according to the specified parameters
+  * in the RCC_OscInitTypeDef structure.
   */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_LSI|RCC_OSCILLATORTYPE_HSE
                               |RCC_OSCILLATORTYPE_LSE;
@@ -259,13 +257,13 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
-  /** Activate the Over-Drive mode 
+  /** Activate the Over-Drive mode
   */
   if (HAL_PWREx_EnableOverDrive() != HAL_OK)
   {
     Error_Handler();
   }
-  /** Initializes the CPU, AHB and APB busses clocks 
+  /** Initializes the CPU, AHB and APB buses clocks
   */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
@@ -294,125 +292,125 @@ void SystemClock_Config(void)
 
 /* USER CODE BEGIN 4 */
 
-static void _read_adc() {
-	for (uint32_t i = 0; i < SAMPLES_COUNT;) {
-		HAL_ADC_Start(&hadc3);
-		HAL_ADC_PollForConversion(&hadc3, 10);
-		adc_buffer[i] = HAL_ADC_GetValue(&hadc3);
-		i++;
-		HAL_ADC_Start(&hadc3);
-		HAL_ADC_PollForConversion(&hadc3, 10);
-		adc_buffer[i] = HAL_ADC_GetValue(&hadc3);
-		i++;
-		HAL_ADC_Start(&hadc3);
-		HAL_ADC_PollForConversion(&hadc3, 10);
-		adc_buffer[i] = HAL_ADC_GetValue(&hadc3);
-		i++;
-		HAL_ADC_Start(&hadc3);
-		HAL_ADC_PollForConversion(&hadc3, 10);
-		adc_buffer[i] = HAL_ADC_GetValue(&hadc3);
-		i++;
-		HAL_ADC_Start(&hadc3);
-		HAL_ADC_PollForConversion(&hadc3, 10);
-		adc_buffer[i] = HAL_ADC_GetValue(&hadc3);
-		i++;
-		HAL_ADC_Start(&hadc3);
-		HAL_ADC_PollForConversion(&hadc3, 10);
-		adc_buffer[i] = HAL_ADC_GetValue(&hadc3);
-		i++;
-	}
-}
-
-static void _clear_adc_buffer() {
-	for (uint32_t i = 0; i < SAMPLES_COUNT; i++) {
-		adc_buffer[i] = 0;
-	}
-}
-
-static void _us_delay(uint32_t delay) {
-	TIM6->SR = 0;
-	TIM6->ARR = delay;
-	TIM6->PSC = 108 - 1;
-	TIM6->CR1 |= TIM_CR1_CEN;
-	while (!(TIM6->SR & TIM_SR_UIF))
-		;
-}
-
-static uint8_t _write_data_SD(char *file_name, uint8_t *data, uint16_t length) {
-	FIL file;
-	FRESULT fr;
-	UINT bw;
-
-	fr = f_open(&file, file_name, FA_WRITE | FA_OPEN_APPEND);
-	f_sync(&file);
-	if (fr == FR_OK) {
-		//seek to end of the file to append data
-		fr = f_lseek(&file, f_size(&file));
-		if (fr != FR_OK) {
-			f_close(&file);
-			return HAL_ERROR;
-		}
-	} else {
-		f_close(&file);
-		return HAL_ERROR;
-	}
-
-	//add number of the samples
-	uint8_t temp[2] = { line_counter >> 8, line_counter };
-	fr = f_write(&file, temp, sizeof(temp), &bw);
-	if (fr != FR_OK) {
-		f_close(&file);
-		return HAL_ERROR;
-	}
-	f_sync(&file);
-	line_counter++;
-
-	//add samples data
-	fr = f_write(&file, data, length, &bw);
-	if (fr != FR_OK) {
-		f_close(&file);
-		return HAL_ERROR;
-	}
-	f_sync(&file);
-	HAL_Delay(1);
-
-	//add divider of the line
-	uint16_t divider = 0xFFFF;
-	fr = f_write(&file, &divider, sizeof(divider), &bw);
-	if (fr != FR_OK) {
-		f_close(&file);
-		return HAL_ERROR;
-	}
-	f_sync(&file);
-
-	f_close(&file);
-	return HAL_OK;
-}
-
-static void convert_buffers(uint16_t *in_data, uint8_t *out_data,
-		uint32_t input_buffer_size) {
-	for (uint32_t i = 0, j = 0; i < input_buffer_size; i++) {
-		uint16_t temp = in_data[i];
-		out_data[j] = temp >> 8;
-		++j;
-		out_data[j] = temp;
-		++j;
-	}
-}
-
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
-	if (GPIO_Pin == USER_Btn_Pin) {
-		new_data_flag = 1;
-		if (deviceAction.action == ACTION_STOP)
-			deviceAction.action = ACTION_RUN;
-		else if (deviceAction.action == ACTION_RUN)
-			deviceAction.action = ACTION_STOP;
-	}
-}
+//static void _read_adc() {
+//	for (uint32_t i = 0; i < SAMPLES_COUNT;) {
+//		HAL_ADC_Start(&hadc3);
+//		HAL_ADC_PollForConversion(&hadc3, 10);
+//		adc_buffer[i] = HAL_ADC_GetValue(&hadc3);
+//		i++;
+//		HAL_ADC_Start(&hadc3);
+//		HAL_ADC_PollForConversion(&hadc3, 10);
+//		adc_buffer[i] = HAL_ADC_GetValue(&hadc3);
+//		i++;
+//		HAL_ADC_Start(&hadc3);
+//		HAL_ADC_PollForConversion(&hadc3, 10);
+//		adc_buffer[i] = HAL_ADC_GetValue(&hadc3);
+//		i++;
+//		HAL_ADC_Start(&hadc3);
+//		HAL_ADC_PollForConversion(&hadc3, 10);
+//		adc_buffer[i] = HAL_ADC_GetValue(&hadc3);
+//		i++;
+//		HAL_ADC_Start(&hadc3);
+//		HAL_ADC_PollForConversion(&hadc3, 10);
+//		adc_buffer[i] = HAL_ADC_GetValue(&hadc3);
+//		i++;
+//		HAL_ADC_Start(&hadc3);
+//		HAL_ADC_PollForConversion(&hadc3, 10);
+//		adc_buffer[i] = HAL_ADC_GetValue(&hadc3);
+//		i++;
+//	}
+//}
+//
+//static void _clear_adc_buffer() {
+//	for (uint32_t i = 0; i < SAMPLES_COUNT; i++) {
+//		adc_buffer[i] = 0;
+//	}
+//}
+//
+//static void _us_delay(uint32_t delay) {
+//	TIM6->SR = 0;
+//	TIM6->ARR = delay;
+//	TIM6->PSC = 108 - 1;
+//	TIM6->CR1 |= TIM_CR1_CEN;
+//	while (!(TIM6->SR & TIM_SR_UIF))
+//		;
+//}
+//
+//static uint8_t _write_data_SD(char *file_name, uint8_t *data, uint16_t length) {
+//	FIL file;
+//	FRESULT fr;
+//	UINT bw;
+//
+//	fr = f_open(&file, file_name, FA_WRITE | FA_OPEN_APPEND);
+//	f_sync(&file);
+//	if (fr == FR_OK) {
+//		//seek to end of the file to append data
+//		fr = f_lseek(&file, f_size(&file));
+//		if (fr != FR_OK) {
+//			f_close(&file);
+//			return HAL_ERROR;
+//		}
+//	} else {
+//		f_close(&file);
+//		return HAL_ERROR;
+//	}
+//
+//	//add number of the samples
+//	uint8_t temp[2] = { line_counter >> 8, line_counter };
+//	fr = f_write(&file, temp, sizeof(temp), &bw);
+//	if (fr != FR_OK) {
+//		f_close(&file);
+//		return HAL_ERROR;
+//	}
+//	f_sync(&file);
+//	line_counter++;
+//
+//	//add samples data
+//	fr = f_write(&file, data, length, &bw);
+//	if (fr != FR_OK) {
+//		f_close(&file);
+//		return HAL_ERROR;
+//	}
+//	f_sync(&file);
+//	HAL_Delay(1);
+//
+//	//add divider of the line
+//	uint16_t divider = 0xFFFF;
+//	fr = f_write(&file, &divider, sizeof(divider), &bw);
+//	if (fr != FR_OK) {
+//		f_close(&file);
+//		return HAL_ERROR;
+//	}
+//	f_sync(&file);
+//
+//	f_close(&file);
+//	return HAL_OK;
+//}
+//
+//static void convert_buffers(uint16_t *in_data, uint8_t *out_data,
+//		uint32_t input_buffer_size) {
+//	for (uint32_t i = 0, j = 0; i < input_buffer_size; i++) {
+//		uint16_t temp = in_data[i];
+//		out_data[j] = temp >> 8;
+//		++j;
+//		out_data[j] = temp;
+//		++j;
+//	}
+//}
+//
+//void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
+//	if (GPIO_Pin == USER_Btn_Pin) {
+//		new_data_flag = 1;
+//		if (deviceAction.action == ACTION_STOP)
+//			deviceAction.action = ACTION_RUN;
+//		else if (deviceAction.action == ACTION_RUN)
+//			deviceAction.action = ACTION_STOP;
+//	}
+//}
 
 /* USER CODE END 4 */
 
- /**
+/**
   * @brief  Period elapsed callback in non blocking mode
   * @note   This function is called  when TIM7 interrupt took place, inside
   * HAL_TIM_IRQHandler(). It makes a direct call to HAL_IncTick() to increment
@@ -455,7 +453,7 @@ void Error_Handler(void)
   * @retval None
   */
 void assert_failed(uint8_t *file, uint32_t line)
-{ 
+{
   /* USER CODE BEGIN 6 */
   /* User can add his own implementation to report the file name and line number,
      tex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
