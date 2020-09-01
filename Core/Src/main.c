@@ -60,15 +60,7 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-//volatile uint16_t adc_buffer[SAMPLES_COUNT] = { 0 };
-//
-//volatile static uint8_t start_flag = 0;
-//volatile uint16_t line_counter = 0;
-//
-//volatile uint8_t new_data_flag = 0;
-//
-//volatile DeviceAction_t deviceAction;
-//volatile DeviceSettings_t deviceSettings;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/

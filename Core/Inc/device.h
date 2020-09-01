@@ -17,10 +17,10 @@
 #define TIME_INTERVAL_REG 	(0x0C)
 #define SD_CARD_RECORD_REG 	(0x10)
 
-#define ACTION_RUN			(0xBD)
-#define ACTION_STOP			(0xA5)
-#define ACTION_GET			(0x55)
-#define ACTION_SET			(0xAA)
+#define ACTION_RUN			('r')
+#define ACTION_STOP			('s')
+#define ACTION_GET			('g')
+#define ACTION_SET			('e')
 
 #define ACTION_DATA			(0xCA)
 #define ACTION_SETTINGS		(0x59)

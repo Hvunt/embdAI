@@ -66,12 +66,11 @@ typedef struct einkDrawData {
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 #define SERVER_ADDRESS 	"194.67.110.109"
-//#define PUB_TOPIC_NAME "device/sensor"		//TODO replace "device" with MCU ID
-//#define SUB_TOPIC_NAME "device/settings"	//TODO replace "device" with MCU ID
-//#define PUB_TOPIC_NAME 	"/sensor"
 #define SUB_TOPIC_NAME 	"devices/settings"
 
-static const char PUB_TOPIC_NAME[] = "/sensor";
+static const char PUB_TOPIC_NAME_POST_DATA[] = "/sensors";
+static const char PUB_TOPIC_NAME_POST_SETTINGS[] = "/settings";
+static const char PUB_TOPIC_NAME_PRED[] = "devices/";
 
 #define DEVICE_LOGIN	"test_device"
 #define DEVICE_PASSWORD "4556"
@@ -95,6 +94,7 @@ extern IWDG_HandleTypeDef hiwdg;
 extern struct netif gnetif;
 
 DeviceSettings_t device;
+DeviceAction_t deviceState;
 //osMutexId_t connectionBusy_Mutex;
 //osMutexId_t displayBusy_Mutex;
 //
@@ -111,7 +111,7 @@ const osThreadAttr_t initTaskName_attributes = { .name = "initTaskName",
 /* Definitions for dataSend */
 osThreadId_t dataSendHandle;
 const osThreadAttr_t dataSend_attributes = { .name = "dataSend", .priority =
-		(osPriority_t) osPriorityLow4, .stack_size = 512 * 4 };
+		(osPriority_t) osPriorityLow4, .stack_size = 8192 * 4 };
 /* Definitions for collectData */
 osThreadId_t collectDataHandle;
 const osThreadAttr_t collectData_attributes = { .name = "collectData",
@@ -155,8 +155,8 @@ static void mqtt_sub_request_cb(void *arg, err_t result);
 
 //utility
 static void getDeviceID(char *name);
-
-//eink-display function prototype
+static void makePubTopicName(char *out, size_t out_len);
+//eink-display functions prototype
 uint8_t screen_init();
 
 /* USER CODE END FunctionPrototypes */
@@ -237,8 +237,7 @@ void MX_FREERTOS_Init(void) {
 
 	/* USER CODE BEGIN RTOS_THREADS */
 	const osThreadAttr_t screenInit_attributes = { .name = "screenInit",
-			.priority = (osPriority_t) osPriorityLow2, .stack_size = 256
-					* 4 };
+			.priority = (osPriority_t) osPriorityLow2, .stack_size = 256 * 4 };
 //	const osThreadAttr_t watchdogTask_attributes = { .name = "watchdogTask",
 //			.priority = (osPriority_t) osPriorityNormal, .stack_size = 64 * 4 };
 //	const osThreadAttr_t sendData_attributes = { .name = "sendData", .priority =
@@ -284,55 +283,60 @@ void initTask(void *argument) {
 /* USER CODE END Header_dataSendTask */
 void dataSendTask(void *argument) {
 	/* USER CODE BEGIN dataSendTask */
+	size_t freeHeapSize = xPortGetFreeHeapSize();
 	MX_LWIP_Init();
+
 	osDelay(3000);
 	mqtt_client_t *client = mqtt_client_new();
 	if (client != NULL) {
 		connect_to_server(client);
 	}
-	osDelay(1000);
+//	osDelay(1000);
 	/* Infinite loop */
-	char pub_top_name[sizeof(device.deviceID) - 1 + sizeof(PUB_TOPIC_NAME)];
-	strncpy(pub_top_name, device.deviceID, sizeof(device.deviceID));
-	for (uint8_t i = sizeof(device.deviceID) - 1, j = 0; i < sizeof(pub_top_name);
-			++i, ++j)
-		pub_top_name[i] = PUB_TOPIC_NAME[j];
+
+	//make topic name: device/[UUID]/sensor
+	size_t pub_top_name_len = sizeof(device.deviceID) - 2
+			+ sizeof(PUB_TOPIC_NAME_PRED) + sizeof(PUB_TOPIC_NAME_POST_DATA);
+	char pub_top_name[pub_top_name_len];
+	makePubTopicName(pub_top_name, pub_top_name_len);
 
 	char temp[10] = { 0 };
 	uint16_t errors = 0;
 	for (;;) {
-		if(mqtt_client_is_connected(client)){
-			if (dataBusyMutexHandle != NULL) {
-				osStatus_t result = osMutexAcquire(dataBusyMutexHandle, 20);
-				if (result == osOK) {
-					err_t err = mqtt_publish(client, pub_top_name,
-							(uint8_t*) sensorsDataBuffer, 200, 2, 0,
-							mqtt_pub_request_cb, NULL);
-					if (err != ERR_OK) {
-						HAL_GPIO_WritePin(LD1_GPIO_Port, LD1_Pin, GPIO_PIN_SET);
-						errors++;
+		if (deviceState.action == ACTION_RUN) {
+			if (mqtt_client_is_connected(client)) {
+				if (dataBusyMutexHandle != NULL) {
+					osStatus_t result = osMutexAcquire(dataBusyMutexHandle, 20);
+					if (result == osOK) {
+						err_t err = mqtt_publish(client, pub_top_name,
+								(uint8_t*) sensorsDataBuffer, 200, 0, 0,
+								mqtt_pub_request_cb, NULL);
+						if (err != ERR_OK) {
+							HAL_GPIO_WritePin(LD1_GPIO_Port, LD1_Pin,
+									GPIO_PIN_SET);
+							errors++;
 
-						snprintf(temp, sizeof(temp), "%d\n", errors);
-						HAL_UART_Transmit(&huart3, (uint8_t*) temp,
-								sizeof(temp), 0x10);
-					} else {
-						HAL_GPIO_WritePin(LD1_GPIO_Port, LD1_Pin,
-								GPIO_PIN_RESET);
+							snprintf(temp, sizeof(temp), "%d\n", errors);
+							HAL_UART_Transmit(&huart3, (uint8_t*) temp,
+									sizeof(temp), 0x10);
+						} else {
+							HAL_GPIO_WritePin(LD1_GPIO_Port, LD1_Pin,
+									GPIO_PIN_RESET);
+						}
 					}
+					osMutexRelease(dataBusyMutexHandle);
+				} else {
+					HAL_GPIO_WritePin(LD1_GPIO_Port, LD1_Pin, GPIO_PIN_SET);
 				}
-				osMutexRelease(dataBusyMutexHandle);
-			}
-		} else {
-//			uint8_t state = client->conn_state;
-//			if (state == 0){
+			} else {
 				osDelay(2000);
 				connect_to_server(client);
-//			}
+			}
 		}
 
 		osDelay(100);
 		//		uxHighWaterMark = uxTaskGetStackHighWaterMark( NULL );
-		//		freeHeapSize = xPortGetFreeHeapSize();
+		freeHeapSize = xPortGetFreeHeapSize();
 	}
 	/* USER CODE END dataSendTask */
 }
@@ -353,12 +357,9 @@ void collectDataTask(void *argument) {
 		if (dataBusyMutexHandle != NULL) {
 			osStatus_t res = osMutexAcquire(dataBusyMutexHandle, 20);
 			if (res == osOK) {
-				for (uint16_t i = 0; i < sensorsData_attributes.mq_size; i++) {
-//					sensorsDataBuffer[i] = (uint8_t) HAL_RNG_GetRandomNumber(
-//							&hrng);
-					HAL_RNG_GenerateRandomNumber(&hrng, (uint32_t *) &sensorsDataBuffer[i]);
-				}
-
+				for (uint16_t i = 0; i < sensorsData_attributes.mq_size; i++)
+					HAL_RNG_GenerateRandomNumber(&hrng,
+							(uint32_t*) &sensorsDataBuffer[i]);
 			}
 			osMutexRelease(dataBusyMutexHandle);
 		}
@@ -460,7 +461,19 @@ static void mqtt_incoming_publish_cb(void *arg, const char *topic,
 
 static void mqtt_incoming_data_cb(void *arg, const uint8_t *data, uint16_t len,
 		uint8_t flags) {
-	HAL_UART_Transmit(&huart3, (uint8_t*) data, len, 0x100);
+	if (len > 0) {
+		switch (data[0]) {
+		case ACTION_RUN:
+			deviceState.action = ACTION_RUN;
+			break;
+		case ACTION_STOP:
+			deviceState.action = ACTION_STOP;
+			break;
+		default:
+			break;
+		}
+	}
+//	HAL_UART_Transmit(&huart3, (uint8_t*) data, len, 0x100);
 }
 
 static void mqtt_pub_request_cb(void *arg, err_t result) {
@@ -475,7 +488,7 @@ void drawMessageTask(void *args) {
 	if (screenBusyMutexHandle != NULL) {
 		osStatus_t res = osMutexAcquire(screenBusyMutexHandle, osWaitForever);
 		if (res == osOK) {
-			char id[13] = {0};
+			char id[13] = { 0 };
 			switch (data->type) {
 			case EDDT_CONNECTION_STATUS:
 
@@ -576,6 +589,15 @@ static void getDeviceID(char *name) {
 		for (uint8_t z = 0; z < 4; z++) {
 			name[j + z] = temp[z];
 		}
+	}
+}
+
+static void makePubTopicName(char *out, size_t out_len) {
+	if (out != NULL) {
+		strncpy(out, PUB_TOPIC_NAME_PRED, sizeof(PUB_TOPIC_NAME_PRED));
+		strncat(out, device.deviceID, sizeof(device.deviceID));
+		strncat(out, PUB_TOPIC_NAME_POST_DATA,
+				sizeof(PUB_TOPIC_NAME_POST_DATA));
 	}
 }
 /* USER CODE END Application */
