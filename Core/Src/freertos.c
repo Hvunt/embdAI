@@ -286,12 +286,16 @@ void dataSendTask(void *argument) {
 	size_t freeHeapSize = xPortGetFreeHeapSize();
 	MX_LWIP_Init();
 
-	osDelay(3000);
+	while(gnetif.ip_addr.addr == 0){
+		HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
+		osDelay(500);
+	}
+	HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
+
 	mqtt_client_t *client = mqtt_client_new();
 	if (client != NULL) {
 		connect_to_server(client);
 	}
-//	osDelay(1000);
 	/* Infinite loop */
 
 	//make topic name: device/[UUID]/sensor

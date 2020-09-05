@@ -218,19 +218,19 @@ static void low_level_init(struct netif *netif) {
 	heth.Instance = ETH;
 	heth.Init.AutoNegotiation = ETH_AUTONEGOTIATION_ENABLE;
 	heth.Init.PhyAddress = LAN8742A_PHY_ADDRESS;
-	MACAddr[0] = device.deviceID[0];
-	MACAddr[1] = device.deviceID[1];
-	MACAddr[2] = device.deviceID[2];
-	MACAddr[3] = device.deviceID[3];
-	MACAddr[4] = device.deviceID[10];
-	MACAddr[5] = device.deviceID[11];
+	MACAddr[0] = 0x00;
+	MACAddr[1] = 0x80;
+	MACAddr[2] = 0x00;
+	MACAddr[3] = 0x15;
+	MACAddr[4] = 0x00;
+	MACAddr[5] = 0x00;
 	heth.Init.MACAddr = &MACAddr[0];
 	heth.Init.RxMode = ETH_RXINTERRUPT_MODE;
 	heth.Init.ChecksumMode = ETH_CHECKSUM_BY_HARDWARE;
 	heth.Init.MediaInterface = ETH_MEDIA_INTERFACE_RMII;
 
 	/* USER CODE BEGIN MACADDRESS */
-	for (uint8_t i = 0, j = 0; i < 6; i++, j += 2) {
+	for (uint8_t i = 1, j = 2; i < 6; i++, j += 2) {
 		char temp[2] = { device.deviceID[j], device.deviceID[j + 1] };
 		MACAddr[i] = atoi(temp);
 	}
