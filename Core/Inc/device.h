@@ -32,12 +32,29 @@ enum {
 	SD_CARD_RECORD_GET
 };
 
+enum {
+	DEVICE_STATUS_AWAITING = 0,
+	DEVICE_STATUS_COLLECT_DATA,
+	DEVICE_STATUS_LEARNING,
+	DEVICE_STATUS_MONITORING,
+	DEVICE_STATUS_HW_ERROR,
+	DEVICE_STATUS_NO_IP_ERROR,
+	DEVICE_STATUS_NO_CONNECTION_ERROR,
+};
+
 typedef struct DeviceSettings{
+	//count of used sensors
 	uint8_t la_t_sens_count;		//0..2 -- Low Accuracy temperature sensors
 	uint8_t ha_t_sens_count;		//0..2 -- High Accuracy temperature sensors
 	uint8_t dis_sens_count;			//0..4 -- Displacement sensors
+
+	//time interval between each measured data packets
 	uint16_t time_interval;			//100..10000 ms
-	uint8_t sd_card_record;			//0..3 -- type of record and transmit data
+
+	uint8_t sd_card_record;			//0..3 -- type of the recording and transmitting the data
+
+	uint8_t device_status;			//current device status
+
 	char deviceID[13];				//unique device ID
 } DeviceSettings_t;
 

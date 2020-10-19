@@ -1,4 +1,4 @@
 /.settings
-ai_prod Debug.launch
-ai_prod Release.launch
+*.launch
 /Debug
+.mxproject
