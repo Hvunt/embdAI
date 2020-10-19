@@ -45,7 +45,6 @@ void MX_GPIO_Init(void)
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOF_CLK_ENABLE();
-  __HAL_RCC_GPIOH_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
   __HAL_RCC_GPIOE_CLK_ENABLE();
@@ -121,7 +120,7 @@ void MX_GPIO_Init(void)
   HAL_GPIO_Init(EID_BUSY_GPIO_Port, &GPIO_InitStruct);
 
   /* EXTI interrupt init*/
-  HAL_NVIC_SetPriority(EXTI15_10_IRQn, 5, 0);
+  HAL_NVIC_SetPriority(EXTI15_10_IRQn, 6, 0);
   HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 
 }
