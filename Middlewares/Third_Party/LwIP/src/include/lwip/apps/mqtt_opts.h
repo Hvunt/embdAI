@@ -53,7 +53,7 @@ extern "C" {
  * Output ring-buffer size, must be able to fit largest outgoing publish message topic+payloads
  */
 #ifndef MQTT_OUTPUT_RINGBUF_SIZE
-#define MQTT_OUTPUT_RINGBUF_SIZE 300
+#define MQTT_OUTPUT_RINGBUF_SIZE 256
 #endif
 
 /**
@@ -68,7 +68,7 @@ extern "C" {
  * Maximum number of pending subscribe, unsubscribe and publish requests to server .
  */
 #ifndef MQTT_REQ_MAX_IN_FLIGHT
-#define MQTT_REQ_MAX_IN_FLIGHT 10
+#define MQTT_REQ_MAX_IN_FLIGHT 4
 #endif
 
 /**
