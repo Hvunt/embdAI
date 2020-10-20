@@ -88,23 +88,13 @@ static const char PUB_TOPIC_NAME_PRED[] = "devices/";
 UBYTE *BlackImage, *YellowImage;
 
 extern RNG_HandleTypeDef hrng;
-extern UART_HandleTypeDef huart3;
 extern IWDG_HandleTypeDef hiwdg;
 extern ADC_HandleTypeDef hadc3;
 
 extern struct netif gnetif;
-//extern struct ip4_addr_t ipaddr;
 
 DeviceSettings_t device;
 DeviceAction_t deviceState;
-//osMutexId_t connectionBusy_Mutex;
-//osMutexId_t displayBusy_Mutex;
-//
-//osSemaphoreId_t dataFactory_Sem;
-//
-//const osThreadAttr_t drawDataTask_attributes = {
-//		.stack_size = 128 * 4
-//};
 /* USER CODE END Variables */
 /* Definitions for initTaskName */
 osThreadId_t initTaskNameHandle;
@@ -143,9 +133,7 @@ const osSemaphoreAttr_t adcReadySem_attributes = { .name = "adcReadySem" };
 /* USER CODE BEGIN FunctionPrototypes */
 void screenInitTask(void *args);
 void watchdogTask(void *args);
-//void sendDataTask(void *arg);
 //void writeDataToSDTask(void *arg);
-//void collectDataTask(void *arg);
 //
 void drawMessageTask(void *message);
 
@@ -203,7 +191,6 @@ void MX_FREERTOS_Init(void) {
 	getDeviceID(deviceID);
 	deviceSettingsInit(&device);
 	deviceSetID(&device, deviceID, sizeof(deviceID));
-
 	/* USER CODE END Init */
 	/* Create the mutex(es) */
 	/* creation of dataBusyMutex */
@@ -213,8 +200,6 @@ void MX_FREERTOS_Init(void) {
 	screenBusyMutexHandle = osMutexNew(&screenBusyMutex_attributes);
 
 	/* USER CODE BEGIN RTOS_MUTEX */
-//	connectionBusy_Mutex = osMutexNew(NULL);
-//	displayBusy_Mutex = osMutexNew(NULL);
 	/* USER CODE END RTOS_MUTEX */
 
 	/* Create the semaphores(s) */
@@ -222,13 +207,12 @@ void MX_FREERTOS_Init(void) {
 	adcReadySemHandle = osSemaphoreNew(1, 1, &adcReadySem_attributes);
 
 	/* USER CODE BEGIN RTOS_SEMAPHORES */
-//	dataFactory_Sem = osSemaphoreNew(3, 0, NULL);
 	/* USER CODE END RTOS_SEMAPHORES */
 
 	/* Create the timer(s) */
 	/* creation of screenRefreshTim */
 	screenRefreshTimHandle = osTimerNew(screenRefreshCallback, osTimerPeriodic,
-	NULL, &screenRefreshTim_attributes);
+			NULL, &screenRefreshTim_attributes);
 
 	/* USER CODE BEGIN RTOS_TIMERS */
 	/* start timers, add new ones, ... */
@@ -257,20 +241,7 @@ void MX_FREERTOS_Init(void) {
 	/* USER CODE BEGIN RTOS_THREADS */
 	const osThreadAttr_t screenInit_attributes = { .name = "screenInit",
 			.priority = (osPriority_t) osPriorityLow2, .stack_size = 256 * 4 };
-//	const osThreadAttr_t watchdogTask_attributes = { .name = "watchdogTask",
-//			.priority = (osPriority_t) osPriorityNormal, .stack_size = 64 * 4 };
-//	const osThreadAttr_t sendData_attributes = { .name = "sendData", .priority =
-//			(osPriority_t) osPriorityNormal, .stack_size = 256 * 4 };
-//	const osThreadAttr_t writeDataToSD_attributes = { .name = "writeDataToSD",
-//			.priority = (osPriority_t) osPriorityNormal, .stack_size = 256 * 4 };
-//	const osThreadAttr_t collectData_attributes = { .name = "collectData",
-//			.priority = (osPriority_t) osPriorityNormal, .stack_size = 256 * 4 };
-//
 	osThreadNew(screenInitTask, NULL, &screenInit_attributes);
-//	osThreadNew(watchdogTask, NULL, &watchdogTask_attributes);
-//	osThreadNew(sendDataTask, NULL, &sendData_attributes);
-//	osThreadNew(writeDataToSDTask, NULL, &writeDataToSD_attributes);
-//	osThreadNew(collectDataTask, NULL, &collectData_attributes);
 
 	/* USER CODE END RTOS_THREADS */
 
@@ -285,10 +256,6 @@ void MX_FREERTOS_Init(void) {
 /* USER CODE END Header_initTask */
 void initTask(void *argument) {
 	/* USER CODE BEGIN initTask */
-//	char deviceID[12] = { 0 };
-//	getDeviceID(deviceID);
-//	deviceSettingsInit(&device);
-//	deviceSetID(&device, deviceID);
 	osThreadExit();
 	/* USER CODE END initTask */
 }
@@ -323,8 +290,7 @@ void dataSendTask(void *argument) {
 	char pub_top_name[pub_top_name_len];
 	makePubTopicName(pub_top_name, pub_top_name_len);
 
-	char temp[10] = { 0 };
-	uint16_t errors = 0;
+	uint16_t sending_errors = 0;
 
 	device.device_status = DEVICE_STATUS_AWAITING;
 	for (;;) {
@@ -341,11 +307,7 @@ void dataSendTask(void *argument) {
 						if (err != ERR_OK) {
 							HAL_GPIO_WritePin(LD1_GPIO_Port, LD1_Pin,
 									GPIO_PIN_SET);
-							errors++;
-
-							snprintf(temp, sizeof(temp), "%d\n", errors);
-							HAL_UART_Transmit(&huart3, (uint8_t*) temp,
-									sizeof(temp), 0x10);
+							sending_errors++;
 						} else {
 							HAL_GPIO_WritePin(LD1_GPIO_Port, LD1_Pin,
 									GPIO_PIN_RESET);
@@ -363,7 +325,7 @@ void dataSendTask(void *argument) {
 		}
 
 		osDelay(100);
-		//		uxHighWaterMark = uxTaskGetStackHighWaterMark( NULL );
+//		uxHighWaterMark = uxTaskGetStackHighWaterMark( NULL );
 //		freeHeapSize = xPortGetFreeHeapSize();
 	}
 	/* USER CODE END dataSendTask */
@@ -378,12 +340,10 @@ void dataSendTask(void *argument) {
 /* USER CODE END Header_collectDataTask */
 void collectDataTask(void *argument) {
 	/* USER CODE BEGIN collectDataTask */
-	/* Infinite loop */
 	for (;;) {
 		if (dataBusyMutexHandle != NULL) {
 			osStatus_t res = osMutexAcquire(dataBusyMutexHandle, osWaitForever);
 			if (res == osOK) {
-//				sendDataBuffClear();
 				clean_buff(sensorsDataBuffer, sensorsData_attributes.mq_size);
 				for (uint16_t i = 0; i < sensorsData_attributes.mq_size;) {
 					uint16_t data[7] = { 0 };
@@ -412,8 +372,8 @@ void screenRefreshCallback(void *argument) {
 			Paint_SelectImage(YellowImage);
 			char data[40] = { 0 };
 
-//			Paint_DrawRectangle(0, 0, EPD_2IN9BC_HEIGHT, EPD_2IN9BC_WIDTH, BLACK, 2, DRAW_FILL_EMPTY);
-			Paint_DrawLine(1, 1, 100, 0, BLACK, DOT_PIXEL_1X1, LINE_STYLE_SOLID);
+			Paint_DrawLine(1, 1, 100, 0, BLACK, DOT_PIXEL_1X1,
+					LINE_STYLE_SOLID);
 			sprintf(data, "Status code: %d", device.device_status);
 			Paint_DrawString_EN(5, 16, data, &Font16, BLACK,
 			WHITE);
@@ -428,7 +388,7 @@ void screenRefreshCallback(void *argument) {
 
 			clean_buff(data, sizeof(data));
 			sprintf(data, "My local IP: ");
-			strcat(data, ip4addr_ntoa((const ip4_addr_t *)&gnetif.ip_addr));
+			strcat(data, ip4addr_ntoa((const ip4_addr_t*) &gnetif.ip_addr));
 			Paint_DrawString_EN(5, 52, data, &Font16, BLACK,
 			WHITE);
 
@@ -448,19 +408,6 @@ void watchdogTask(void *args) {
 //		HAL_IWDG_Refresh(&hiwdg);
 	}
 }
-//void sendDataTask(void *arg) {
-//	mqtt_client_t *client = mqtt_client_new();
-//	if(client != NULL){
-//		connect_to_server(client);
-//	}
-//	osDelay(100);
-//	char deviceID[12] = {0};
-//	getDeviceID(deviceID);
-//	osThreadNew(drawDataTask, (void *) deviceID, &drawDataTask_attributes);
-//	for (;;) {
-//
-//	}
-//}
 //
 //void writeDataToSDTask(void *arg) {
 //	for (;;) {
@@ -544,7 +491,6 @@ static void mqtt_incoming_data_cb(void *arg, const uint8_t *data, uint16_t len,
 			break;
 		}
 	}
-//	HAL_UART_Transmit(&huart3, (uint8_t*) data, len, 0x100);
 }
 
 static void mqtt_pub_request_cb(void *arg, err_t result) {
@@ -562,7 +508,7 @@ void screenInitTask(void *args) {
 	}
 
 	//refresh the screen each 1 minute
-	osTimerStart(screenRefreshTimHandle, 30000);
+	osTimerStart(screenRefreshTimHandle, 60000);
 	osThreadExit();
 }
 
@@ -600,7 +546,6 @@ uint8_t screen_init(void) {
 			Paint_SelectImage(YellowImage);
 			Paint_Clear(BLACK);
 			EPD_2IN9BC_Display(BlackImage, YellowImage);
-//			DEV_Delay_ms(5000);
 		}
 		osMutexRelease(screenBusyMutexHandle);
 	} else
@@ -635,13 +580,7 @@ static void makePubTopicName(char *out, size_t out_len) {
 	}
 }
 
-//static void sendDataBuffClear(void) {
-//	for (uint32_t i = 0; i < sensorsData_attributes.mq_size; i++)
-//		sensorsDataBuffer[i] = 0;
-//}
-
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *adc) {
-//	osMutexRelease(adcReadyMutexHandle);
 	osSemaphoreRelease(adcReadySemHandle);
 }
 /* USER CODE END Application */
