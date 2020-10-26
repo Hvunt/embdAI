@@ -40,10 +40,12 @@
 #include "GUI_Paint.h"
 #include "EPD_2in9bc.h"
 #include "MAX31865.h"
-
 #include "device.h"
+
 #include "iwdg.h"
 #include "rng.h"
+#include "fatfs.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -96,6 +98,10 @@ extern struct netif gnetif;
 
 DeviceSettings_t device;
 DeviceAction_t deviceState;
+
+extern FATFS SDFatFS;
+
+//uint8_t sensorsDataBuffer[210 * sizeof(uint8_t)];
 /* USER CODE END Variables */
 /* Definitions for initTaskName */
 osThreadId_t initTaskNameHandle;
@@ -117,6 +123,20 @@ const osThreadAttr_t collectData_attributes = {
   .name = "collectData",
   .priority = (osPriority_t) osPriorityLow3,
   .stack_size = 128 * 4
+};
+/* Definitions for logData */
+osThreadId_t logDataHandle;
+const osThreadAttr_t logData_attributes = {
+  .name = "logData",
+  .priority = (osPriority_t) osPriorityLow,
+  .stack_size = 128 * 4
+};
+/* Definitions for logStatus */
+osThreadId_t logStatusHandle;
+const osThreadAttr_t logStatus_attributes = {
+  .name = "logStatus",
+  .priority = (osPriority_t) osPriorityLow,
+  .stack_size = 1024 * 4
 };
 /* Definitions for sensorsData */
 osMessageQueueId_t sensorsDataHandle;
@@ -144,10 +164,20 @@ osMutexId_t screenBusyMutexHandle;
 const osMutexAttr_t screenBusyMutex_attributes = {
   .name = "screenBusyMutex"
 };
+/* Definitions for sdBusyMutex */
+osMutexId_t sdBusyMutexHandle;
+const osMutexAttr_t sdBusyMutex_attributes = {
+  .name = "sdBusyMutex"
+};
 /* Definitions for adcReadySem */
 osSemaphoreId_t adcReadySemHandle;
 const osSemaphoreAttr_t adcReadySem_attributes = {
   .name = "adcReadySem"
+};
+/* Definitions for dataProcessingSem */
+osSemaphoreId_t dataProcessingSemHandle;
+const osSemaphoreAttr_t dataProcessingSem_attributes = {
+  .name = "dataProcessingSem"
 };
 
 /* Private function prototypes -----------------------------------------------*/
@@ -182,6 +212,8 @@ uint8_t screen_init();
 void initTask(void *argument);
 void dataSendTask(void *argument);
 void collectDataTask(void *argument);
+void logDataTask(void *argument);
+void logStatusTask(void *argument);
 void screenRefreshCallback(void *argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
@@ -220,12 +252,18 @@ void MX_FREERTOS_Init(void) {
   /* creation of screenBusyMutex */
   screenBusyMutexHandle = osMutexNew(&screenBusyMutex_attributes);
 
+  /* creation of sdBusyMutex */
+  sdBusyMutexHandle = osMutexNew(&sdBusyMutex_attributes);
+
   /* USER CODE BEGIN RTOS_MUTEX */
   /* USER CODE END RTOS_MUTEX */
 
   /* Create the semaphores(s) */
   /* creation of adcReadySem */
   adcReadySemHandle = osSemaphoreNew(1, 1, &adcReadySem_attributes);
+
+  /* creation of dataProcessingSem */
+  dataProcessingSemHandle = osSemaphoreNew(2, 2, &dataProcessingSem_attributes);
 
   /* USER CODE BEGIN RTOS_SEMAPHORES */
   /* USER CODE END RTOS_SEMAPHORES */
@@ -256,6 +294,12 @@ void MX_FREERTOS_Init(void) {
   /* creation of collectData */
   collectDataHandle = osThreadNew(collectDataTask, NULL, &collectData_attributes);
 
+  /* creation of logData */
+  logDataHandle = osThreadNew(logDataTask, NULL, &logData_attributes);
+
+  /* creation of logStatus */
+  logStatusHandle = osThreadNew(logStatusTask, NULL, &logStatus_attributes);
+
   /* USER CODE BEGIN RTOS_THREADS */
 	const osThreadAttr_t screenInit_attributes = { .name = "screenInit",
 			.priority = (osPriority_t) osPriorityLow2, .stack_size = 256 * 4 };
@@ -275,6 +319,12 @@ void MX_FREERTOS_Init(void) {
 void initTask(void *argument)
 {
   /* USER CODE BEGIN initTask */
+//	if (sdBusyMutexHandle != NULL){
+//		osStatus_t res = osMutexAcquire(sdBusyMutexHandle, osWaitForever);
+//		if (res == osOK){
+//			osMutexRelease(sdBusyMutexHandle);
+//		}
+//	}
 	osThreadExit();
   /* USER CODE END initTask */
 }
@@ -360,10 +410,10 @@ void dataSendTask(void *argument)
 void collectDataTask(void *argument)
 {
   /* USER CODE BEGIN collectDataTask */
-	Max31865_t max_1, max_2;
-
-	Max31865_init(&max_1, &hspi4, SPI_TCS1_GPIO_Port, SPI_TCS1_Pin, 2, 50);
-	Max31865_init(&max_2, &hspi4, SPI_TCS2_GPIO_Port, SPI_TCS2_Pin, 2, 50);
+//	Max31865_t max_1, max_2;
+//
+//	Max31865_init(&max_1, &hspi4, SPI_TCS1_GPIO_Port, SPI_TCS1_Pin, 2, 50);
+//	Max31865_init(&max_2, &hspi4, SPI_TCS2_GPIO_Port, SPI_TCS2_Pin, 2, 50);
 
 	for (;;) {
 		if (dataBusyMutexHandle != NULL) {
@@ -372,8 +422,14 @@ void collectDataTask(void *argument)
 				clean_buff(sensorsDataBuffer, sensorsData_attributes.mq_size);
 				for (uint16_t i = 0; i < sensorsData_attributes.mq_size;) {
 					uint16_t data[7] = { 0 };
-					osSemaphoreAcquire(adcReadySemHandle, osWaitForever);
+					osSemaphoreAcquire(adcReadySemHandle, osWaitForever); // does it need?
 					HAL_ADC_Start_DMA(&hadc3, (uint32_t*) data, 7);
+//					float temp1 = 0;
+//					uint8_t status = Max31865_readTempC(&max_2, &temp1);
+//					if (status != 0){
+//						HAL_GPIO_TogglePin(LD3_GPIO_Port, LD3_Pin);
+//					}
+					//collect data from MAX31865
 					osSemaphoreAcquire(adcReadySemHandle, osWaitForever);
 					for (uint8_t j = 0; j < 7; j++, i += 2) {
 						sensorsDataBuffer[i] = data[j] >> 8;
@@ -387,6 +443,71 @@ void collectDataTask(void *argument)
 		}
 	}
   /* USER CODE END collectDataTask */
+}
+
+/* USER CODE BEGIN Header_logDataTask */
+/**
+ * @brief Function implementing the logData thread.
+ * @param argument: Not used
+ * @retval None
+ */
+/* USER CODE END Header_logDataTask */
+void logDataTask(void *argument)
+{
+  /* USER CODE BEGIN logDataTask */
+	/* Infinite loop */
+	for (;;) {
+//		if (dataBusyMutexHandle != NULL) {
+//			osStatus_t res = osMutexAcquire(dataBusyMutexHandle, osWaitForever);
+//			if (res == osOk) {
+////				osSemaphoreAcquire(semaphore_id, timeout);
+//
+//			}
+//		}
+		osDelay(1000);
+	}
+  /* USER CODE END logDataTask */
+}
+
+/* USER CODE BEGIN Header_logStatusTask */
+/**
+ * @brief Function implementing the logStatus thread.
+ * @param argument: Not used
+ * @retval None
+ */
+/* USER CODE END Header_logStatusTask */
+void logStatusTask(void *argument)
+{
+  /* USER CODE BEGIN logStatusTask */
+	/* Infinite loop */
+	char log_info[255];
+	FIL logFile;
+	FRESULT f_res;
+	UINT bytes_written;
+	f_mount(&SDFatFS, "", 0);
+	for (;;) {
+		if (sdBusyMutexHandle != NULL){
+			osStatus_t res = osMutexAcquire(sdBusyMutexHandle, osWaitForever);
+			if (res == osOK){
+				char id[13] = {0};
+				deviceGetID(&device, id, sizeof(id));
+				sprintf(log_info,"ID: %s\n", id);
+
+				if (f_open(&logFile, "LOG.LOG",	FA_OPEN_APPEND | FA_WRITE) == FR_OK){
+					f_sync(&logFile);
+					f_res = f_write(&logFile, log_info, strlen(log_info), &bytes_written);
+					if (f_res != FR_OK){
+						HAL_GPIO_WritePin(LD3_GPIO_Port, LD3_Pin, GPIO_PIN_SET);
+					}
+					f_sync(&logFile);
+					f_close(&logFile);
+				}
+				osMutexRelease(sdBusyMutexHandle);
+			}
+		}
+		osDelay(60000);
+	}
+  /* USER CODE END logStatusTask */
 }
 
 /* screenRefreshCallback function */
