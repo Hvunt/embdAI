@@ -103,36 +103,80 @@ DeviceAction_t deviceState;
 /* USER CODE END Variables */
 /* Definitions for initTaskName */
 osThreadId_t initTaskNameHandle;
-const osThreadAttr_t initTaskName_attributes = { .name = "initTaskName",
-		.priority = (osPriority_t) osPriorityNormal, .stack_size = 128 * 4 };
+const osThreadAttr_t initTaskName_attributes = {
+  .name = "initTaskName",
+  .priority = (osPriority_t) osPriorityNormal,
+  .stack_size = 128 * 4
+};
 /* Definitions for dataSend */
 osThreadId_t dataSendHandle;
-const osThreadAttr_t dataSend_attributes = { .name = "dataSend", .priority =
-		(osPriority_t) osPriorityLow4, .stack_size = 300 * 4 };
+const osThreadAttr_t dataSend_attributes = {
+  .name = "dataSend",
+  .priority = (osPriority_t) osPriorityLow4,
+  .stack_size = 300 * 4
+};
 /* Definitions for collectData */
 osThreadId_t collectDataHandle;
-const osThreadAttr_t collectData_attributes = { .name = "collectData",
-		.priority = (osPriority_t) osPriorityLow3, .stack_size = 128 * 4 };
+const osThreadAttr_t collectData_attributes = {
+  .name = "collectData",
+  .priority = (osPriority_t) osPriorityLow3,
+  .stack_size = 128 * 4
+};
+/* Definitions for logData */
+osThreadId_t logDataHandle;
+const osThreadAttr_t logData_attributes = {
+  .name = "logData",
+  .priority = (osPriority_t) osPriorityLow,
+  .stack_size = 128 * 4
+};
+/* Definitions for logStatus */
+osThreadId_t logStatusHandle;
+const osThreadAttr_t logStatus_attributes = {
+  .name = "logStatus",
+  .priority = (osPriority_t) osPriorityLow,
+  .stack_size = 1024 * 4
+};
 /* Definitions for sensorsData */
 osMessageQueueId_t sensorsDataHandle;
-uint8_t sensorsDataBuffer[210 * sizeof(uint8_t)];
+uint8_t sensorsDataBuffer[ 210 * sizeof( uint8_t ) ];
 osStaticMessageQDef_t sensorsDataControlBlock;
-const osMessageQueueAttr_t sensorsData_attributes = { .name = "sensorsData",
-		.cb_mem = &sensorsDataControlBlock, .cb_size =
-				sizeof(sensorsDataControlBlock), .mq_mem = &sensorsDataBuffer,
-		.mq_size = sizeof(sensorsDataBuffer) };
+const osMessageQueueAttr_t sensorsData_attributes = {
+  .name = "sensorsData",
+  .cb_mem = &sensorsDataControlBlock,
+  .cb_size = sizeof(sensorsDataControlBlock),
+  .mq_mem = &sensorsDataBuffer,
+  .mq_size = sizeof(sensorsDataBuffer)
+};
 /* Definitions for screenRefreshTim */
 osTimerId_t screenRefreshTimHandle;
-const osTimerAttr_t screenRefreshTim_attributes = { .name = "screenRefreshTim" };
+const osTimerAttr_t screenRefreshTim_attributes = {
+  .name = "screenRefreshTim"
+};
 /* Definitions for dataBusyMutex */
 osMutexId_t dataBusyMutexHandle;
-const osMutexAttr_t dataBusyMutex_attributes = { .name = "dataBusyMutex" };
+const osMutexAttr_t dataBusyMutex_attributes = {
+  .name = "dataBusyMutex"
+};
 /* Definitions for screenBusyMutex */
 osMutexId_t screenBusyMutexHandle;
-const osMutexAttr_t screenBusyMutex_attributes = { .name = "screenBusyMutex" };
+const osMutexAttr_t screenBusyMutex_attributes = {
+  .name = "screenBusyMutex"
+};
+/* Definitions for sdBusyMutex */
+osMutexId_t sdBusyMutexHandle;
+const osMutexAttr_t sdBusyMutex_attributes = {
+  .name = "sdBusyMutex"
+};
 /* Definitions for adcReadySem */
 osSemaphoreId_t adcReadySemHandle;
-const osSemaphoreAttr_t adcReadySem_attributes = { .name = "adcReadySem" };
+const osSemaphoreAttr_t adcReadySem_attributes = {
+  .name = "adcReadySem"
+};
+/* Definitions for dataProcessingSem */
+osSemaphoreId_t dataProcessingSemHandle;
+const osSemaphoreAttr_t dataProcessingSem_attributes = {
+  .name = "dataProcessingSem"
+};
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
@@ -166,6 +210,8 @@ uint8_t screen_init();
 void initTask(void *argument);
 void dataSendTask(void *argument);
 void collectDataTask(void *argument);
+void logDataTask(void *argument);
+void logStatusTask(void *argument);
 void screenRefreshCallback(void *argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
@@ -186,12 +232,12 @@ __weak unsigned long getRunTimeCounterValue(void) {
 /* USER CODE END 1 */
 
 /**
- * @brief  FreeRTOS initialization
- * @param  None
- * @retval None
- */
+  * @brief  FreeRTOS initialization
+  * @param  None
+  * @retval None
+  */
 void MX_FREERTOS_Init(void) {
-	/* USER CODE BEGIN Init */
+  /* USER CODE BEGIN Init */
 	char deviceID[12] = { 0 };
 	getDeviceID(deviceID);
 	deviceSettingsInit(&device);
@@ -224,35 +270,40 @@ void MX_FREERTOS_Init(void) {
   /* creation of screenRefreshTim */
   screenRefreshTimHandle = osTimerNew(screenRefreshCallback, osTimerPeriodic, NULL, &screenRefreshTim_attributes);
 
-	/* USER CODE BEGIN RTOS_TIMERS */
+  /* USER CODE BEGIN RTOS_TIMERS */
 	/* start timers, add new ones, ... */
-	/* USER CODE END RTOS_TIMERS */
+  /* USER CODE END RTOS_TIMERS */
 
   /* Create the queue(s) */
   /* creation of sensorsData */
   sensorsDataHandle = osMessageQueueNew (210, sizeof(uint8_t), &sensorsData_attributes);
 
-	/* USER CODE BEGIN RTOS_QUEUES */
+  /* USER CODE BEGIN RTOS_QUEUES */
 	/* add queues, ... */
-	/* USER CODE END RTOS_QUEUES */
+  /* USER CODE END RTOS_QUEUES */
 
-	/* Create the thread(s) */
-	/* creation of initTaskName */
-	initTaskNameHandle = osThreadNew(initTask, NULL, &initTaskName_attributes);
+  /* Create the thread(s) */
+  /* creation of initTaskName */
+  initTaskNameHandle = osThreadNew(initTask, NULL, &initTaskName_attributes);
 
-	/* creation of dataSend */
-	dataSendHandle = osThreadNew(dataSendTask, NULL, &dataSend_attributes);
+  /* creation of dataSend */
+  dataSendHandle = osThreadNew(dataSendTask, NULL, &dataSend_attributes);
 
-	/* creation of collectData */
-	collectDataHandle = osThreadNew(collectDataTask, NULL,
-			&collectData_attributes);
+  /* creation of collectData */
+  collectDataHandle = osThreadNew(collectDataTask, NULL, &collectData_attributes);
 
-	/* USER CODE BEGIN RTOS_THREADS */
+  /* creation of logData */
+  logDataHandle = osThreadNew(logDataTask, NULL, &logData_attributes);
+
+  /* creation of logStatus */
+  logStatusHandle = osThreadNew(logStatusTask, NULL, &logStatus_attributes);
+
+  /* USER CODE BEGIN RTOS_THREADS */
 	const osThreadAttr_t screenInit_attributes = { .name = "screenInit",
 			.priority = (osPriority_t) osPriorityLow2, .stack_size = 256 * 4 };
 	osThreadNew(screenInitTask, NULL, &screenInit_attributes);
 
-	/* USER CODE END RTOS_THREADS */
+  /* USER CODE END RTOS_THREADS */
 
 }
 
@@ -273,7 +324,7 @@ void initTask(void *argument)
 //		}
 //	}
 	osThreadExit();
-	/* USER CODE END initTask */
+  /* USER CODE END initTask */
 }
 
 /* USER CODE BEGIN Header_dataSendTask */
@@ -283,8 +334,9 @@ void initTask(void *argument)
  * @retval None
  */
 /* USER CODE END Header_dataSendTask */
-void dataSendTask(void *argument) {
-	/* USER CODE BEGIN dataSendTask */
+void dataSendTask(void *argument)
+{
+  /* USER CODE BEGIN dataSendTask */
 //	size_t freeHeapSize = xPortGetFreeHeapSize();
 	MX_LWIP_Init();
 
@@ -343,7 +395,7 @@ void dataSendTask(void *argument) {
 //		uxHighWaterMark = uxTaskGetStackHighWaterMark( NULL );
 //		freeHeapSize = xPortGetFreeHeapSize();
 	}
-	/* USER CODE END dataSendTask */
+  /* USER CODE END dataSendTask */
 }
 
 /* USER CODE BEGIN Header_collectDataTask */
@@ -356,11 +408,11 @@ void dataSendTask(void *argument) {
 void collectDataTask(void *argument)
 {
   /* USER CODE BEGIN collectDataTask */
-//	Max31865_t max_1, max_2;
-//
-//	Max31865_init(&max_1, &hspi4, SPI_TCS1_GPIO_Port, SPI_TCS1_Pin, 2, 50);
-//	Max31865_init(&max_2, &hspi4, SPI_TCS2_GPIO_Port, SPI_TCS2_Pin, 2, 50);
-
+	Max31865_t max_1, max_2;
+	float temp1 = 0;
+	float temp2 = 0;
+	Max31865_init(&max_1, &hspi4, SPI_TCS1_GPIO_Port, SPI_TCS1_Pin, 2, 50);
+	Max31865_init(&max_2, &hspi4, SPI_TCS2_GPIO_Port, SPI_TCS2_Pin, 2, 50);
 	for (;;) {
 		if (dataBusyMutexHandle != NULL) {
 			osStatus_t res = osMutexAcquire(dataBusyMutexHandle, osWaitForever);
@@ -370,11 +422,9 @@ void collectDataTask(void *argument)
 					uint16_t data[7] = { 0 };
 					osSemaphoreAcquire(adcReadySemHandle, osWaitForever); // does it need?
 					HAL_ADC_Start_DMA(&hadc3, (uint32_t*) data, 7);
-//					float temp1 = 0;
-//					uint8_t status = Max31865_readTempC(&max_2, &temp1);
-//					if (status != 0){
-//						HAL_GPIO_TogglePin(LD3_GPIO_Port, LD3_Pin);
-//					}
+
+					Max31865_readTempC(&max_1, &temp1);
+					Max31865_readTempC(&max_2, &temp2);
 					//collect data from MAX31865
 					osSemaphoreAcquire(adcReadySemHandle, osWaitForever);
 					for (uint8_t j = 0; j < 7; j++, i += 2) {
@@ -425,40 +475,42 @@ void logDataTask(void *argument)
 void logStatusTask(void *argument)
 {
   /* USER CODE BEGIN logStatusTask */
-	/* Infinite loop */
-	char log_info[255];
-	FIL logFile;
-	FRESULT f_res;
-	UINT bytes_written;
-	f_mount(&SDFatFS, "", 0);
+//	char log_info[255];
+//	FIL logFile;
+//	FRESULT f_res;
+//	UINT bytes_written;
+//	f_mount(&SDFatFS, "", 0);
 	for (;;) {
-		if (sdBusyMutexHandle != NULL){
-			osStatus_t res = osMutexAcquire(sdBusyMutexHandle, osWaitForever);
-			if (res == osOK){
-				char id[13] = {0};
-				deviceGetID(&device, id, sizeof(id));
-				sprintf(log_info,"ID: %s\n", id);
-
-				if (f_open(&logFile, "LOG.LOG",	FA_OPEN_APPEND | FA_WRITE) == FR_OK){
-					f_sync(&logFile);
-					f_res = f_write(&logFile, log_info, strlen(log_info), &bytes_written);
-					if (f_res != FR_OK){
-						HAL_GPIO_WritePin(LD3_GPIO_Port, LD3_Pin, GPIO_PIN_SET);
-					}
-					f_sync(&logFile);
-					f_close(&logFile);
-				}
-				osMutexRelease(sdBusyMutexHandle);
-			}
-		}
+//		if (sdBusyMutexHandle != NULL) {
+//			osStatus_t res = osMutexAcquire(sdBusyMutexHandle, osWaitForever);
+//			if (res == osOK) {
+//				char id[13] = { 0 };
+//				deviceGetID(&device, id, sizeof(id));
+//				sprintf(log_info, "ID: %s\n", id);
+//
+//				if (f_open(&logFile, "LOG.LOG", FA_OPEN_APPEND | FA_WRITE)
+//						== FR_OK) {
+//					f_sync(&logFile);
+//					f_res = f_write(&logFile, log_info, strlen(log_info),
+//							&bytes_written);
+//					if (f_res != FR_OK) {
+//						HAL_GPIO_WritePin(LD3_GPIO_Port, LD3_Pin, GPIO_PIN_SET);
+//					}
+//					f_sync(&logFile);
+//					f_close(&logFile);
+//				}
+//				osMutexRelease(sdBusyMutexHandle);
+//			}
+//		}
 		osDelay(60000);
 	}
   /* USER CODE END logStatusTask */
 }
 
 /* screenRefreshCallback function */
-void screenRefreshCallback(void *argument) {
-	/* USER CODE BEGIN screenRefreshCallback */
+void screenRefreshCallback(void *argument)
+{
+  /* USER CODE BEGIN screenRefreshCallback */
 	if (screenBusyMutexHandle != NULL) {
 		osStatus_t res = osMutexAcquire(screenBusyMutexHandle, osWaitForever);
 		if (res == osOK) {
@@ -491,7 +543,7 @@ void screenRefreshCallback(void *argument) {
 			osMutexRelease(screenBusyMutexHandle);
 		}
 	}
-	/* USER CODE END screenRefreshCallback */
+  /* USER CODE END screenRefreshCallback */
 }
 
 /* Private application code --------------------------------------------------*/
