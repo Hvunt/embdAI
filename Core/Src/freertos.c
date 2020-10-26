@@ -43,6 +43,7 @@
 #include "device.h"
 #include "iwdg.h"
 #include "rng.h"
+#include "pepega.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -370,6 +371,8 @@ void screenRefreshCallback(void *argument) {
 		osStatus_t res = osMutexAcquire(screenBusyMutexHandle, osWaitForever);
 		if (res == osOK) {
 			Paint_SelectImage(YellowImage);
+
+			Paint_DrawBitMap(gImage_pepega);
 			char data[40] = { 0 };
 
 			Paint_DrawLine(1, 1, 100, 0, BLACK, DOT_PIXEL_1X1,
@@ -507,6 +510,7 @@ void screenInitTask(void *args) {
 		osThreadExit();
 	}
 
+	screenRefreshCallback(NULL);
 	//refresh the screen each 1 minute
 	osTimerStart(screenRefreshTimHandle, 60000);
 	osThreadExit();
