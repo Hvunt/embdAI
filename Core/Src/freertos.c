@@ -39,11 +39,15 @@
 
 #include "GUI_Paint.h"
 #include "EPD_2in9bc.h"
+#include "MAX31865.h"
+#include "device.h"
 
 #include "device.h"
 #include "iwdg.h"
 #include "rng.h"
 #include "pepega.h"
+#include "fatfs.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -192,37 +196,41 @@ void MX_FREERTOS_Init(void) {
 	getDeviceID(deviceID);
 	deviceSettingsInit(&device);
 	deviceSetID(&device, deviceID, sizeof(deviceID));
-	/* USER CODE END Init */
-	/* Create the mutex(es) */
-	/* creation of dataBusyMutex */
-	dataBusyMutexHandle = osMutexNew(&dataBusyMutex_attributes);
+  /* USER CODE END Init */
+  /* Create the mutex(es) */
+  /* creation of dataBusyMutex */
+  dataBusyMutexHandle = osMutexNew(&dataBusyMutex_attributes);
 
-	/* creation of screenBusyMutex */
-	screenBusyMutexHandle = osMutexNew(&screenBusyMutex_attributes);
+  /* creation of screenBusyMutex */
+  screenBusyMutexHandle = osMutexNew(&screenBusyMutex_attributes);
 
-	/* USER CODE BEGIN RTOS_MUTEX */
-	/* USER CODE END RTOS_MUTEX */
+  /* creation of sdBusyMutex */
+  sdBusyMutexHandle = osMutexNew(&sdBusyMutex_attributes);
 
-	/* Create the semaphores(s) */
-	/* creation of adcReadySem */
-	adcReadySemHandle = osSemaphoreNew(1, 1, &adcReadySem_attributes);
+  /* USER CODE BEGIN RTOS_MUTEX */
+  /* USER CODE END RTOS_MUTEX */
 
-	/* USER CODE BEGIN RTOS_SEMAPHORES */
-	/* USER CODE END RTOS_SEMAPHORES */
+  /* Create the semaphores(s) */
+  /* creation of adcReadySem */
+  adcReadySemHandle = osSemaphoreNew(1, 1, &adcReadySem_attributes);
 
-	/* Create the timer(s) */
-	/* creation of screenRefreshTim */
-	screenRefreshTimHandle = osTimerNew(screenRefreshCallback, osTimerPeriodic,
-			NULL, &screenRefreshTim_attributes);
+  /* creation of dataProcessingSem */
+  dataProcessingSemHandle = osSemaphoreNew(2, 2, &dataProcessingSem_attributes);
+
+  /* USER CODE BEGIN RTOS_SEMAPHORES */
+  /* USER CODE END RTOS_SEMAPHORES */
+
+  /* Create the timer(s) */
+  /* creation of screenRefreshTim */
+  screenRefreshTimHandle = osTimerNew(screenRefreshCallback, osTimerPeriodic, NULL, &screenRefreshTim_attributes);
 
 	/* USER CODE BEGIN RTOS_TIMERS */
 	/* start timers, add new ones, ... */
 	/* USER CODE END RTOS_TIMERS */
 
-	/* Create the queue(s) */
-	/* creation of sensorsData */
-	sensorsDataHandle = osMessageQueueNew(210, sizeof(uint8_t),
-			&sensorsData_attributes);
+  /* Create the queue(s) */
+  /* creation of sensorsData */
+  sensorsDataHandle = osMessageQueueNew (210, sizeof(uint8_t), &sensorsData_attributes);
 
 	/* USER CODE BEGIN RTOS_QUEUES */
 	/* add queues, ... */
@@ -255,8 +263,15 @@ void MX_FREERTOS_Init(void) {
  * @retval None
  */
 /* USER CODE END Header_initTask */
-void initTask(void *argument) {
-	/* USER CODE BEGIN initTask */
+void initTask(void *argument)
+{
+  /* USER CODE BEGIN initTask */
+//	if (sdBusyMutexHandle != NULL){
+//		osStatus_t res = osMutexAcquire(sdBusyMutexHandle, osWaitForever);
+//		if (res == osOK){
+//			osMutexRelease(sdBusyMutexHandle);
+//		}
+//	}
 	osThreadExit();
 	/* USER CODE END initTask */
 }
@@ -283,7 +298,6 @@ void dataSendTask(void *argument) {
 	if (client != NULL) {
 		connect_to_server(client);
 	}
-	/* Infinite loop */
 
 	//make topic name: device/[UUID]/sensor
 	size_t pub_top_name_len = sizeof(device.deviceID) - 2
@@ -339,8 +353,14 @@ void dataSendTask(void *argument) {
  * @retval None
  */
 /* USER CODE END Header_collectDataTask */
-void collectDataTask(void *argument) {
-	/* USER CODE BEGIN collectDataTask */
+void collectDataTask(void *argument)
+{
+  /* USER CODE BEGIN collectDataTask */
+//	Max31865_t max_1, max_2;
+//
+//	Max31865_init(&max_1, &hspi4, SPI_TCS1_GPIO_Port, SPI_TCS1_Pin, 2, 50);
+//	Max31865_init(&max_2, &hspi4, SPI_TCS2_GPIO_Port, SPI_TCS2_Pin, 2, 50);
+
 	for (;;) {
 		if (dataBusyMutexHandle != NULL) {
 			osStatus_t res = osMutexAcquire(dataBusyMutexHandle, osWaitForever);
@@ -348,8 +368,14 @@ void collectDataTask(void *argument) {
 				clean_buff(sensorsDataBuffer, sensorsData_attributes.mq_size);
 				for (uint16_t i = 0; i < sensorsData_attributes.mq_size;) {
 					uint16_t data[7] = { 0 };
-					osSemaphoreAcquire(adcReadySemHandle, osWaitForever);
+					osSemaphoreAcquire(adcReadySemHandle, osWaitForever); // does it need?
 					HAL_ADC_Start_DMA(&hadc3, (uint32_t*) data, 7);
+//					float temp1 = 0;
+//					uint8_t status = Max31865_readTempC(&max_2, &temp1);
+//					if (status != 0){
+//						HAL_GPIO_TogglePin(LD3_GPIO_Port, LD3_Pin);
+//					}
+					//collect data from MAX31865
 					osSemaphoreAcquire(adcReadySemHandle, osWaitForever);
 					for (uint8_t j = 0; j < 7; j++, i += 2) {
 						sensorsDataBuffer[i] = data[j] >> 8;
@@ -357,11 +383,77 @@ void collectDataTask(void *argument) {
 					}
 					osSemaphoreRelease(adcReadySemHandle);
 				}
+
 				osMutexRelease(dataBusyMutexHandle);
 			}
 		}
 	}
-	/* USER CODE END collectDataTask */
+  /* USER CODE END collectDataTask */
+}
+
+/* USER CODE BEGIN Header_logDataTask */
+/**
+ * @brief Function implementing the logData thread.
+ * @param argument: Not used
+ * @retval None
+ */
+/* USER CODE END Header_logDataTask */
+void logDataTask(void *argument)
+{
+  /* USER CODE BEGIN logDataTask */
+	/* Infinite loop */
+	for (;;) {
+//		if (dataBusyMutexHandle != NULL) {
+//			osStatus_t res = osMutexAcquire(dataBusyMutexHandle, osWaitForever);
+//			if (res == osOk) {
+////				osSemaphoreAcquire(semaphore_id, timeout);
+//
+//			}
+//		}
+		osDelay(1000);
+	}
+  /* USER CODE END logDataTask */
+}
+
+/* USER CODE BEGIN Header_logStatusTask */
+/**
+ * @brief Function implementing the logStatus thread.
+ * @param argument: Not used
+ * @retval None
+ */
+/* USER CODE END Header_logStatusTask */
+void logStatusTask(void *argument)
+{
+  /* USER CODE BEGIN logStatusTask */
+	/* Infinite loop */
+	char log_info[255];
+	FIL logFile;
+	FRESULT f_res;
+	UINT bytes_written;
+	f_mount(&SDFatFS, "", 0);
+	for (;;) {
+		if (sdBusyMutexHandle != NULL){
+			osStatus_t res = osMutexAcquire(sdBusyMutexHandle, osWaitForever);
+			if (res == osOK){
+				char id[13] = {0};
+				deviceGetID(&device, id, sizeof(id));
+				sprintf(log_info,"ID: %s\n", id);
+
+				if (f_open(&logFile, "LOG.LOG",	FA_OPEN_APPEND | FA_WRITE) == FR_OK){
+					f_sync(&logFile);
+					f_res = f_write(&logFile, log_info, strlen(log_info), &bytes_written);
+					if (f_res != FR_OK){
+						HAL_GPIO_WritePin(LD3_GPIO_Port, LD3_Pin, GPIO_PIN_SET);
+					}
+					f_sync(&logFile);
+					f_close(&logFile);
+				}
+				osMutexRelease(sdBusyMutexHandle);
+			}
+		}
+		osDelay(60000);
+	}
+  /* USER CODE END logStatusTask */
 }
 
 /* screenRefreshCallback function */

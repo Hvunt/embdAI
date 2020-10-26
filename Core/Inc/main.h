@@ -48,9 +48,9 @@ extern "C" {
 
 /* Exported macro ------------------------------------------------------------*/
 /* USER CODE BEGIN EM */
-#define ADC_CONVERSION 0.000806
-#define SAMPLES_COUNT 180*6
-#define FRAMES_COUNT 1
+//#define ADC_CONVERSION 0.000806
+//#define SAMPLES_COUNT 180*6
+//#define FRAMES_COUNT 1
 /* USER CODE END EM */
 
 /* Exported functions prototypes ---------------------------------------------*/
