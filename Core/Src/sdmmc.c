@@ -58,30 +58,26 @@ void HAL_SD_MspInit(SD_HandleTypeDef* sdHandle)
     __HAL_RCC_GPIOD_CLK_ENABLE();
     /**SDMMC1 GPIO Configuration
     PC8     ------> SDMMC1_D0
-    PC9     ------> SDMMC1_D1
-    PC10     ------> SDMMC1_D2
-    PC11     ------> SDMMC1_D3
     PC12     ------> SDMMC1_CK
     PD2     ------> SDMMC1_CMD
     */
-    GPIO_InitStruct.Pin = GPIO_PIN_8|GPIO_PIN_9|GPIO_PIN_10|GPIO_PIN_11
-                          |GPIO_PIN_12;
+    GPIO_InitStruct.Pin = GPIO_PIN_8|GPIO_PIN_12;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Pull = GPIO_PULLUP;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
     GPIO_InitStruct.Alternate = GPIO_AF12_SDMMC1;
     HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
     GPIO_InitStruct.Pin = GPIO_PIN_2;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Pull = GPIO_PULLUP;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
     GPIO_InitStruct.Alternate = GPIO_AF12_SDMMC1;
     HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
 
     /* SDMMC1 DMA Init */
     /* SDMMC1 Init */
-    hdma_sdmmc1.Instance = DMA2_Stream3;
+    hdma_sdmmc1.Instance = DMA2_Stream6;
     hdma_sdmmc1.Init.Channel = DMA_CHANNEL_4;
     hdma_sdmmc1.Init.Direction = DMA_PERIPH_TO_MEMORY;
     hdma_sdmmc1.Init.PeriphInc = DMA_PINC_DISABLE;
@@ -89,7 +85,7 @@ void HAL_SD_MspInit(SD_HandleTypeDef* sdHandle)
     hdma_sdmmc1.Init.PeriphDataAlignment = DMA_PDATAALIGN_WORD;
     hdma_sdmmc1.Init.MemDataAlignment = DMA_MDATAALIGN_WORD;
     hdma_sdmmc1.Init.Mode = DMA_PFCTRL;
-    hdma_sdmmc1.Init.Priority = DMA_PRIORITY_HIGH;
+    hdma_sdmmc1.Init.Priority = DMA_PRIORITY_MEDIUM;
     hdma_sdmmc1.Init.FIFOMode = DMA_FIFOMODE_ENABLE;
     hdma_sdmmc1.Init.FIFOThreshold = DMA_FIFO_THRESHOLD_FULL;
     hdma_sdmmc1.Init.MemBurst = DMA_MBURST_INC4;
@@ -125,14 +121,10 @@ void HAL_SD_MspDeInit(SD_HandleTypeDef* sdHandle)
 
     /**SDMMC1 GPIO Configuration
     PC8     ------> SDMMC1_D0
-    PC9     ------> SDMMC1_D1
-    PC10     ------> SDMMC1_D2
-    PC11     ------> SDMMC1_D3
     PC12     ------> SDMMC1_CK
     PD2     ------> SDMMC1_CMD
     */
-    HAL_GPIO_DeInit(GPIOC, GPIO_PIN_8|GPIO_PIN_9|GPIO_PIN_10|GPIO_PIN_11
-                          |GPIO_PIN_12);
+    HAL_GPIO_DeInit(GPIOC, GPIO_PIN_8|GPIO_PIN_12);
 
     HAL_GPIO_DeInit(GPIOD, GPIO_PIN_2);
 

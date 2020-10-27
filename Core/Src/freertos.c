@@ -105,7 +105,7 @@ DeviceAction_t deviceState;
 osThreadId_t initTaskNameHandle;
 const osThreadAttr_t initTaskName_attributes = {
   .name = "initTaskName",
-  .priority = (osPriority_t) osPriorityNormal,
+  .priority = (osPriority_t) osPriorityHigh,
   .stack_size = 128 * 4
 };
 /* Definitions for dataSend */
@@ -126,14 +126,14 @@ const osThreadAttr_t collectData_attributes = {
 osThreadId_t logDataHandle;
 const osThreadAttr_t logData_attributes = {
   .name = "logData",
-  .priority = (osPriority_t) osPriorityLow,
+  .priority = (osPriority_t) osPriorityLow3,
   .stack_size = 128 * 4
 };
 /* Definitions for logStatus */
 osThreadId_t logStatusHandle;
 const osThreadAttr_t logStatus_attributes = {
   .name = "logStatus",
-  .priority = (osPriority_t) osPriorityLow,
+  .priority = (osPriority_t) osPriorityLow3,
   .stack_size = 1024 * 4
 };
 /* Definitions for sensorsData */
@@ -166,11 +166,6 @@ const osMutexAttr_t screenBusyMutex_attributes = {
 osMutexId_t sdBusyMutexHandle;
 const osMutexAttr_t sdBusyMutex_attributes = {
   .name = "sdBusyMutex"
-};
-/* Definitions for adcReadySem */
-osSemaphoreId_t adcReadySemHandle;
-const osSemaphoreAttr_t adcReadySem_attributes = {
-  .name = "adcReadySem"
 };
 /* Definitions for dataProcessingSem */
 osSemaphoreId_t dataProcessingSemHandle;
@@ -257,9 +252,6 @@ void MX_FREERTOS_Init(void) {
   /* USER CODE END RTOS_MUTEX */
 
   /* Create the semaphores(s) */
-  /* creation of adcReadySem */
-  adcReadySemHandle = osSemaphoreNew(1, 1, &adcReadySem_attributes);
-
   /* creation of dataProcessingSem */
   dataProcessingSemHandle = osSemaphoreNew(2, 2, &dataProcessingSem_attributes);
 
@@ -284,24 +276,24 @@ void MX_FREERTOS_Init(void) {
 
   /* Create the thread(s) */
   /* creation of initTaskName */
-  initTaskNameHandle = osThreadNew(initTask, NULL, &initTaskName_attributes);
+//  initTaskNameHandle = osThreadNew(initTask, NULL, &initTaskName_attributes);
 
   /* creation of dataSend */
-  dataSendHandle = osThreadNew(dataSendTask, NULL, &dataSend_attributes);
+//  dataSendHandle = osThreadNew(dataSendTask, NULL, &dataSend_attributes);
 
   /* creation of collectData */
-  collectDataHandle = osThreadNew(collectDataTask, NULL, &collectData_attributes);
+//  collectDataHandle = osThreadNew(collectDataTask, NULL, &collectData_attributes);
 
   /* creation of logData */
-  logDataHandle = osThreadNew(logDataTask, NULL, &logData_attributes);
+//  logDataHandle = osThreadNew(logDataTask, NULL, &logData_attributes);
 
   /* creation of logStatus */
   logStatusHandle = osThreadNew(logStatusTask, NULL, &logStatus_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
-	const osThreadAttr_t screenInit_attributes = { .name = "screenInit",
-			.priority = (osPriority_t) osPriorityLow2, .stack_size = 256 * 4 };
-	osThreadNew(screenInitTask, NULL, &screenInit_attributes);
+//	const osThreadAttr_t screenInit_attributes = { .name = "screenInit",
+//			.priority = (osPriority_t) osPriorityLow2, .stack_size = 256 * 4 };
+//	osThreadNew(screenInitTask, NULL, &screenInit_attributes);
 
   /* USER CODE END RTOS_THREADS */
 
@@ -317,12 +309,10 @@ void MX_FREERTOS_Init(void) {
 void initTask(void *argument)
 {
   /* USER CODE BEGIN initTask */
-//	if (sdBusyMutexHandle != NULL){
-//		osStatus_t res = osMutexAcquire(sdBusyMutexHandle, osWaitForever);
-//		if (res == osOK){
-//			osMutexRelease(sdBusyMutexHandle);
-//		}
-//	}
+//	f_mount(&SDFatFS, "", 0);
+//	ff_del_syncobj(&SDFatFS.sobj);
+//	SDFatFS.sobj = DMA2BusySemHandle;
+
 	osThreadExit();
   /* USER CODE END initTask */
 }
@@ -408,30 +398,35 @@ void dataSendTask(void *argument)
 void collectDataTask(void *argument)
 {
   /* USER CODE BEGIN collectDataTask */
-	Max31865_t max_1, max_2;
-	float temp1 = 0;
-	float temp2 = 0;
-	Max31865_init(&max_1, &hspi4, SPI_TCS1_GPIO_Port, SPI_TCS1_Pin, 2, 50);
-	Max31865_init(&max_2, &hspi4, SPI_TCS2_GPIO_Port, SPI_TCS2_Pin, 2, 50);
+//	Max31865_t max_1, max_2;
+//	float temp1 = 0;
+//	float temp2 = 0;
+//	Max31865_init(&max_1, &hspi4, SPI_TCS1_GPIO_Port, SPI_TCS1_Pin, 2, 50);
+//	Max31865_init(&max_2, &hspi4, SPI_TCS2_GPIO_Port, SPI_TCS2_Pin, 2, 50);
 	for (;;) {
 		if (dataBusyMutexHandle != NULL) {
 			osStatus_t res = osMutexAcquire(dataBusyMutexHandle, osWaitForever);
 			if (res == osOK) {
 				clean_buff(sensorsDataBuffer, sensorsData_attributes.mq_size);
 				for (uint16_t i = 0; i < sensorsData_attributes.mq_size;) {
-					uint16_t data[7] = { 0 };
-					osSemaphoreAcquire(adcReadySemHandle, osWaitForever); // does it need?
-					HAL_ADC_Start_DMA(&hadc3, (uint32_t*) data, 7);
+//					uint16_t data[7] = { 0 };
+//					osSemaphoreAcquire(adcReadySemHandle, osWaitForever); // does it need?
 
-					Max31865_readTempC(&max_1, &temp1);
-					Max31865_readTempC(&max_2, &temp2);
+//					HAL_ADC_Start_DMA(&hadc3, (uint32_t*) data, 7);
+
 					//collect data from MAX31865
-					osSemaphoreAcquire(adcReadySemHandle, osWaitForever);
+//					Max31865_readTempC(&max_1, &temp1);
+//					Max31865_readTempC(&max_2, &temp2);
+
+//					osSemaphoreAcquire(adcReadySemHandle, osWaitForever);
 					for (uint8_t j = 0; j < 7; j++, i += 2) {
-						sensorsDataBuffer[i] = data[j] >> 8;
-						sensorsDataBuffer[i + 1] = data[j];
+						HAL_ADC_Start(&hadc3);
+						HAL_ADC_PollForConversion(&hadc3, 10);
+						uint16_t value = HAL_ADC_GetValue(&hadc3);
+						sensorsDataBuffer[i] = value >> 8;
+						sensorsDataBuffer[i + 1] = value;
 					}
-					osSemaphoreRelease(adcReadySemHandle);
+//					osSemaphoreRelease(adcReadySemHandle);
 				}
 
 				osMutexRelease(dataBusyMutexHandle);
@@ -475,33 +470,37 @@ void logDataTask(void *argument)
 void logStatusTask(void *argument)
 {
   /* USER CODE BEGIN logStatusTask */
-//	char log_info[255];
-//	FIL logFile;
-//	FRESULT f_res;
-//	UINT bytes_written;
-//	f_mount(&SDFatFS, "", 0);
+	char log_info[255];
+	FIL logFile;
+	FRESULT f_res;
+	UINT bytes_written;
+	if(f_mount(&SDFatFS, "", 0) != FR_OK){
+		while(1){
+			HAL_GPIO_TogglePin(LD3_GPIO_Port, LD3_Pin);
+			osDelay(100);
+		}
+	}
 	for (;;) {
-//		if (sdBusyMutexHandle != NULL) {
-//			osStatus_t res = osMutexAcquire(sdBusyMutexHandle, osWaitForever);
-//			if (res == osOK) {
-//				char id[13] = { 0 };
-//				deviceGetID(&device, id, sizeof(id));
-//				sprintf(log_info, "ID: %s\n", id);
-//
-//				if (f_open(&logFile, "LOG.LOG", FA_OPEN_APPEND | FA_WRITE)
-//						== FR_OK) {
-//					f_sync(&logFile);
-//					f_res = f_write(&logFile, log_info, strlen(log_info),
-//							&bytes_written);
-//					if (f_res != FR_OK) {
-//						HAL_GPIO_WritePin(LD3_GPIO_Port, LD3_Pin, GPIO_PIN_SET);
-//					}
-//					f_sync(&logFile);
-//					f_close(&logFile);
-//				}
-//				osMutexRelease(sdBusyMutexHandle);
-//			}
-//		}
+		if (sdBusyMutexHandle != NULL) {
+			osStatus_t res = osSemaphoreAcquire(sdBusyMutexHandle, osWaitForever);
+			if (res == osOK) {
+				char id[13] = { 0 };
+				deviceGetID(&device, id, sizeof(id));
+				sprintf(log_info, "ID: %s\n", id);
+				if (f_open(&logFile, "LOG.LOG", FA_OPEN_APPEND | FA_WRITE)
+						== FR_OK) {
+					f_sync(&logFile);
+					f_res = f_write(&logFile, log_info, strlen(log_info),
+							&bytes_written);
+					if (f_res != FR_OK) {
+						HAL_GPIO_WritePin(LD3_GPIO_Port, LD3_Pin, GPIO_PIN_SET);
+					}
+					f_sync(&logFile);
+					f_close(&logFile);
+				}
+				osSemaphoreRelease(sdBusyMutexHandle);
+			}
+		}
 		osDelay(60000);
 	}
   /* USER CODE END logStatusTask */
@@ -728,9 +727,9 @@ static void makePubTopicName(char *out, size_t out_len) {
 	}
 }
 
-void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *adc) {
-	osSemaphoreRelease(adcReadySemHandle);
-}
+//void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *adc) {
+//	osSemaphoreRelease(DMA2BusySemHandle);
+//}
 /* USER CODE END Application */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
