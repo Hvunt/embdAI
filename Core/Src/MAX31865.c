@@ -79,8 +79,6 @@ void Max31865_writeRegister8(Max31865_t *max31865, uint8_t addr, uint8_t data) {
 }
 //#########################################################################################################################
 uint8_t Max31865_readFault(Max31865_t *max31865) {
-//	uint8_t error = Max31865_readRegister8(max31865, MAX31856_FAULTSTAT_REG);
-//	return error;
 	return Max31865_readRegister8(max31865, MAX31856_FAULTSTAT_REG);
 }
 //#########################################################################################################################
@@ -154,17 +152,15 @@ void Max31865_init(Max31865_t *max31865, SPI_HandleTypeDef *spi,
 	max31865->cs_pin = cs_pin;
 	HAL_GPIO_WritePin(max31865->cs_gpio, max31865->cs_pin, GPIO_PIN_SET);
 	Max31865_delay(500);
-	uint8_t temp[10] = { 0 };
 
-//	for (uint8_t i = 0; i < 1; i++)
-//		temp[i] = Max31865_readRegister8(max31865, 0);
 	Max31865_clearFault(max31865);
-
 	Max31865_enableBias(max31865, 0);
 	Max31865_autoConvert(max31865, 0);
-
 	Max31865_setWires(max31865, numwires);
 	Max31865_setFilter(max31865, filterHz);
+	Max31865_writeRegister8(max31865, MAX31856_HFAULTMSB_REG, 0xE0);
+//	uint8_t temp = Max31865_readRegister8(max31865, MAX)
+
 }
 //#########################################################################################################################
 bool Max31865_readTempC(Max31865_t *max31865, float *readTemp) {

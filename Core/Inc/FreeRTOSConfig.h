@@ -69,7 +69,7 @@
 #define configMAX_PRIORITIES                     ( 56 )
 #define configMINIMAL_STACK_SIZE                 ((uint16_t)128)
 #define configTOTAL_HEAP_SIZE                    ((size_t)65536)
-#define configMAX_TASK_NAME_LEN                  ( 16 )
+#define configMAX_TASK_NAME_LEN                  ( 20 )
 #define configGENERATE_RUN_TIME_STATS            1
 #define configUSE_TRACE_FACILITY                 1
 #define configUSE_STATS_FORMATTING_FUNCTIONS     1
@@ -91,8 +91,8 @@
 
 /* Software timer definitions. */
 #define configUSE_TIMERS                         1
-#define configTIMER_TASK_PRIORITY                ( 2 )
-#define configTIMER_QUEUE_LENGTH                 10
+#define configTIMER_TASK_PRIORITY                ( 3 )
+#define configTIMER_QUEUE_LENGTH                 50
 #define configTIMER_TASK_STACK_DEPTH             256
 
 /* Set the following definitions to 1 to include the API function, or zero

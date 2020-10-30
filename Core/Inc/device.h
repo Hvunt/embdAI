@@ -47,9 +47,11 @@ typedef struct DeviceSettings{
 	uint8_t la_t_sens_count;		//0..2 -- Low Accuracy temperature sensors
 	uint8_t ha_t_sens_count;		//0..2 -- High Accuracy temperature sensors
 	uint8_t dis_sens_count;			//0..4 -- Displacement sensors
+	uint8_t use_mic;				//using microphone
 
 	//time interval between each measured data packets
 	uint16_t time_interval;			//100..10000 ms
+	uint16_t samples;				//samples count 15...20
 
 	uint8_t sd_card_record;			//0..3 -- type of the recording and transmitting the data
 
