@@ -159,7 +159,7 @@ const osThreadAttr_t HATSCollect_attributes = {
 };
 /* Definitions for sensorsData */
 osMessageQueueId_t sensorsDataHandle;
-uint8_t sensorsDataBuffer[ 270 * sizeof( uint8_t ) ];
+uint8_t sensorsDataBuffer[ 540 * sizeof( uint8_t ) ];
 osStaticMessageQDef_t sensorsDataControlBlock;
 const osMessageQueueAttr_t sensorsData_attributes = {
   .name = "sensorsData",
@@ -297,7 +297,7 @@ void MX_FREERTOS_Init(void) {
 
   /* Create the queue(s) */
   /* creation of sensorsData */
-  sensorsDataHandle = osMessageQueueNew (270, sizeof(uint8_t), &sensorsData_attributes);
+  sensorsDataHandle = osMessageQueueNew (540, sizeof(uint8_t), &sensorsData_attributes);
 
   /* USER CODE BEGIN RTOS_QUEUES */
 	/* add queues, ... */
