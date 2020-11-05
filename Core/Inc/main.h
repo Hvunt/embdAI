@@ -61,7 +61,8 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define MQTT_OUTPUT_RINGBUF_SIZE 580
+#define MQTT_OUTPUT_RINGBUF_SIZE 4096
+#define MQTT_REQ_MAX_IN_FLIGHT 6
 #define USER_Btn_Pin GPIO_PIN_13
 #define USER_Btn_GPIO_Port GPIOC
 #define USER_Btn_EXTI_IRQn EXTI15_10_IRQn

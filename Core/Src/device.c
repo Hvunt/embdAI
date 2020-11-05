@@ -13,7 +13,7 @@ void deviceSettingsInit(DeviceSettings_t *deviceSettings) {
 	deviceSettings->dis_sens_count = 4;
 	deviceSettings->la_t_sens_count = 2;
 	deviceSettings->ha_t_sens_count = 2;
-	deviceSettings->time_interval = 300;
+	deviceSettings->time_interval = 50;
 	deviceSettings->use_mic = 0;
 }
 

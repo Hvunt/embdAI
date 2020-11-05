@@ -23,7 +23,6 @@
 #include "adc.h"
 #include "crc.h"
 #include "dma.h"
-#include "fatfs.h"
 #include "iwdg.h"
 #include "mbedtls.h"
 #include "rng.h"
@@ -118,7 +117,6 @@ int main(void)
   MX_DMA_Init();
   MX_CRC_Init();
   MX_SDMMC1_SD_Init();
-  MX_FATFS_Init();
   MX_ADC3_Init();
   MX_RNG_Init();
   MX_SPI3_Init();

@@ -46,7 +46,7 @@
 #include "iwdg.h"
 #include "rng.h"
 #include "pepega.h"
-#include "fatfs.h"
+//#include "fatfs.h"
 
 /* USER CODE END Includes */
 
@@ -74,7 +74,7 @@ typedef struct einkDrawData {
 #define SUB_TOPIC_NAME 	"devices/settings"
 
 static const char PUB_TOPIC_NAME_POST_DATA[] = "/sensors";
-static const char PUB_TOPIC_NAME_POST_SETTINGS[] = "/settings";
+//static const char PUB_TOPIC_NAME_POST_SETTINGS[] = "/settings";
 static const char PUB_TOPIC_NAME_PRED[] = "devices/";
 
 #define DEVICE_LOGIN	"test_device"
@@ -110,94 +110,60 @@ const osThreadAttr_t screenInit_attributes = { .name = "screenInit", .priority =
 /* USER CODE END Variables */
 /* Definitions for init */
 osThreadId_t initHandle;
-const osThreadAttr_t init_attributes = {
-  .name = "init",
-  .priority = (osPriority_t) osPriorityLow7,
-  .stack_size = 128 * 4
-};
+const osThreadAttr_t init_attributes = { .name = "init", .priority =
+		(osPriority_t) osPriorityLow7, .stack_size = 128 * 4 };
 /* Definitions for dataSend */
 osThreadId_t dataSendHandle;
-const osThreadAttr_t dataSend_attributes = {
-  .name = "dataSend",
-  .priority = (osPriority_t) osPriorityBelowNormal,
-  .stack_size = 300 * 4
-};
+const osThreadAttr_t dataSend_attributes = { .name = "dataSend", .priority =
+		(osPriority_t) osPriorityBelowNormal, .stack_size = 380 * 4 };
 /* Definitions for collectData */
 osThreadId_t collectDataHandle;
-const osThreadAttr_t collectData_attributes = {
-  .name = "collectData",
-  .priority = (osPriority_t) osPriorityBelowNormal,
-  .stack_size = 128 * 4
-};
+const osThreadAttr_t collectData_attributes =
+		{ .name = "collectData", .priority =
+				(osPriority_t) osPriorityBelowNormal, .stack_size = 128 * 4 };
 /* Definitions for logData */
 osThreadId_t logDataHandle;
-const osThreadAttr_t logData_attributes = {
-  .name = "logData",
-  .priority = (osPriority_t) osPriorityLow4,
-  .stack_size = 128 * 4
-};
+const osThreadAttr_t logData_attributes = { .name = "logData", .priority =
+		(osPriority_t) osPriorityLow4, .stack_size = 128 * 4 };
 /* Definitions for logStatus */
 osThreadId_t logStatusHandle;
-const osThreadAttr_t logStatus_attributes = {
-  .name = "logStatus",
-  .priority = (osPriority_t) osPriorityLow4,
-  .stack_size = 128 * 4
-};
+const osThreadAttr_t logStatus_attributes = { .name = "logStatus", .priority =
+		(osPriority_t) osPriorityLow4, .stack_size = 128 * 4 };
 /* Definitions for screenRefresh */
 osThreadId_t screenRefreshHandle;
-const osThreadAttr_t screenRefresh_attributes = {
-  .name = "screenRefresh",
-  .priority = (osPriority_t) osPriorityLow6,
-  .stack_size = 150 * 4
-};
+const osThreadAttr_t screenRefresh_attributes = { .name = "screenRefresh",
+		.priority = (osPriority_t) osPriorityLow6, .stack_size = 200 * 4 };
 /* Definitions for HATSCollect */
 osThreadId_t HATSCollectHandle;
-const osThreadAttr_t HATSCollect_attributes = {
-  .name = "HATSCollect",
-  .priority = (osPriority_t) osPriorityLow6,
-  .stack_size = 128 * 4
-};
+const osThreadAttr_t HATSCollect_attributes = { .name = "HATSCollect",
+		.priority = (osPriority_t) osPriorityLow6, .stack_size = 150 * 4 };
 /* Definitions for sensorsData */
 osMessageQueueId_t sensorsDataHandle;
-uint8_t sensorsDataBuffer[ 540 * sizeof( uint8_t ) ];
+uint8_t sensorsDataBuffer[900 * sizeof(uint8_t)];
 osStaticMessageQDef_t sensorsDataControlBlock;
-const osMessageQueueAttr_t sensorsData_attributes = {
-  .name = "sensorsData",
-  .cb_mem = &sensorsDataControlBlock,
-  .cb_size = sizeof(sensorsDataControlBlock),
-  .mq_mem = &sensorsDataBuffer,
-  .mq_size = sizeof(sensorsDataBuffer)
-};
+const osMessageQueueAttr_t sensorsData_attributes = { .name = "sensorsData",
+		.cb_mem = &sensorsDataControlBlock, .cb_size =
+				sizeof(sensorsDataControlBlock), .mq_mem = &sensorsDataBuffer,
+		.mq_size = sizeof(sensorsDataBuffer) };
 /* Definitions for dataBusyMutex */
 osMutexId_t dataBusyMutexHandle;
-const osMutexAttr_t dataBusyMutex_attributes = {
-  .name = "dataBusyMutex"
-};
+const osMutexAttr_t dataBusyMutex_attributes = { .name = "dataBusyMutex" };
 /* Definitions for screenBusyMutex */
 osMutexId_t screenBusyMutexHandle;
-const osMutexAttr_t screenBusyMutex_attributes = {
-  .name = "screenBusyMutex"
-};
+const osMutexAttr_t screenBusyMutex_attributes = { .name = "screenBusyMutex" };
 /* Definitions for sdBusyMutex */
 osMutexId_t sdBusyMutexHandle;
-const osMutexAttr_t sdBusyMutex_attributes = {
-  .name = "sdBusyMutex"
-};
+const osMutexAttr_t sdBusyMutex_attributes = { .name = "sdBusyMutex" };
 /* Definitions for HATSMutex */
 osMutexId_t HATSMutexHandle;
-const osMutexAttr_t HATSMutex_attributes = {
-  .name = "HATSMutex"
-};
+const osMutexAttr_t HATSMutex_attributes = { .name = "HATSMutex" };
 /* Definitions for DMA2BusySem */
 osSemaphoreId_t DMA2BusySemHandle;
-const osSemaphoreAttr_t DMA2BusySem_attributes = {
-  .name = "DMA2BusySem"
-};
+const osSemaphoreAttr_t DMA2BusySem_attributes = { .name = "DMA2BusySem" };
 /* Definitions for dataProcessingSem */
 osSemaphoreId_t dataProcessingSemHandle;
-const osSemaphoreAttr_t dataProcessingSem_attributes = {
-  .name = "dataProcessingSem"
-};
+const osSemaphoreAttr_t dataProcessingSem_attributes = { .name =
+		"dataProcessingSem" };
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
@@ -254,81 +220,86 @@ __weak unsigned long getRunTimeCounterValue(void) {
 /* USER CODE END 1 */
 
 /**
-  * @brief  FreeRTOS initialization
-  * @param  None
-  * @retval None
-  */
+ * @brief  FreeRTOS initialization
+ * @param  None
+ * @retval None
+ */
 void MX_FREERTOS_Init(void) {
-  /* USER CODE BEGIN Init */
+	/* USER CODE BEGIN Init */
 	char deviceID[12] = { 0 };
 	getDeviceID(deviceID);
 	deviceSettingsInit(&device);
 	deviceSetID(&device, deviceID, sizeof(deviceID));
-  /* USER CODE END Init */
-  /* Create the mutex(es) */
-  /* creation of dataBusyMutex */
-  dataBusyMutexHandle = osMutexNew(&dataBusyMutex_attributes);
+	/* USER CODE END Init */
+	/* Create the mutex(es) */
+	/* creation of dataBusyMutex */
+	dataBusyMutexHandle = osMutexNew(&dataBusyMutex_attributes);
 
-  /* creation of screenBusyMutex */
-  screenBusyMutexHandle = osMutexNew(&screenBusyMutex_attributes);
+	/* creation of screenBusyMutex */
+	screenBusyMutexHandle = osMutexNew(&screenBusyMutex_attributes);
 
-  /* creation of sdBusyMutex */
-  sdBusyMutexHandle = osMutexNew(&sdBusyMutex_attributes);
+	/* creation of sdBusyMutex */
+	sdBusyMutexHandle = osMutexNew(&sdBusyMutex_attributes);
 
-  /* creation of HATSMutex */
-  HATSMutexHandle = osMutexNew(&HATSMutex_attributes);
+	/* creation of HATSMutex */
+	HATSMutexHandle = osMutexNew(&HATSMutex_attributes);
 
-  /* USER CODE BEGIN RTOS_MUTEX */
-  /* USER CODE END RTOS_MUTEX */
+	/* USER CODE BEGIN RTOS_MUTEX */
+	/* USER CODE END RTOS_MUTEX */
 
-  /* Create the semaphores(s) */
-  /* creation of DMA2BusySem */
-  DMA2BusySemHandle = osSemaphoreNew(1, 1, &DMA2BusySem_attributes);
+	/* Create the semaphores(s) */
+	/* creation of DMA2BusySem */
+	DMA2BusySemHandle = osSemaphoreNew(1, 1, &DMA2BusySem_attributes);
 
-  /* creation of dataProcessingSem */
-  dataProcessingSemHandle = osSemaphoreNew(2, 2, &dataProcessingSem_attributes);
+	/* creation of dataProcessingSem */
+	dataProcessingSemHandle = osSemaphoreNew(2, 2,
+			&dataProcessingSem_attributes);
 
-  /* USER CODE BEGIN RTOS_SEMAPHORES */
-  /* USER CODE END RTOS_SEMAPHORES */
+	/* USER CODE BEGIN RTOS_SEMAPHORES */
+	/* USER CODE END RTOS_SEMAPHORES */
 
-  /* USER CODE BEGIN RTOS_TIMERS */
+	/* USER CODE BEGIN RTOS_TIMERS */
 	/* start timers, add new ones, ... */
-  /* USER CODE END RTOS_TIMERS */
+	/* USER CODE END RTOS_TIMERS */
 
-  /* Create the queue(s) */
-  /* creation of sensorsData */
-  sensorsDataHandle = osMessageQueueNew (540, sizeof(uint8_t), &sensorsData_attributes);
+	/* Create the queue(s) */
+	/* creation of sensorsData */
+	sensorsDataHandle = osMessageQueueNew(900, sizeof(uint8_t),
+			&sensorsData_attributes);
 
-  /* USER CODE BEGIN RTOS_QUEUES */
+	/* USER CODE BEGIN RTOS_QUEUES */
 	/* add queues, ... */
-  /* USER CODE END RTOS_QUEUES */
+	/* USER CODE END RTOS_QUEUES */
 
-  /* Create the thread(s) */
-  /* creation of init */
-  initHandle = osThreadNew(initTask, NULL, &init_attributes);
+	/* Create the thread(s) */
+	/* creation of init */
+	initHandle = osThreadNew(initTask, NULL, &init_attributes);
 
-  /* creation of dataSend */
-  dataSendHandle = osThreadNew(dataSendTask, NULL, &dataSend_attributes);
+	/* creation of dataSend */
+	dataSendHandle = osThreadNew(dataSendTask, NULL, &dataSend_attributes);
 
-  /* creation of collectData */
-  collectDataHandle = osThreadNew(collectDataTask, NULL, &collectData_attributes);
+	/* creation of collectData */
+	collectDataHandle = osThreadNew(collectDataTask, NULL,
+			&collectData_attributes);
 
-  /* creation of logData */
-  logDataHandle = osThreadNew(logDataTask, NULL, &logData_attributes);
+	/* creation of logData */
+	logDataHandle = osThreadNew(logDataTask, NULL, &logData_attributes);
 
-  /* creation of logStatus */
-  logStatusHandle = osThreadNew(logStatusTask, NULL, &logStatus_attributes);
+	/* creation of logStatus */
+	logStatusHandle = osThreadNew(logStatusTask, NULL, &logStatus_attributes);
 
-  /* creation of screenRefresh */
-  screenRefreshHandle = osThreadNew(screenRefreshTask, NULL, &screenRefresh_attributes);
+	/* creation of screenRefresh */
+	screenRefreshHandle = osThreadNew(screenRefreshTask, NULL,
+			&screenRefresh_attributes);
 
-  /* creation of HATSCollect */
-  HATSCollectHandle = osThreadNew(HATSCollectTask, NULL, &HATSCollect_attributes);
+	/* creation of HATSCollect */
+	HATSCollectHandle = osThreadNew(HATSCollectTask, NULL,
+			&HATSCollect_attributes);
 
-  /* USER CODE BEGIN RTOS_THREADS */
+	/* USER CODE BEGIN RTOS_THREADS */
 
 //	osThreadNew(screenInitTask, NULL, &screenInit_attributes);
-  /* USER CODE END RTOS_THREADS */
+	/* USER CODE END RTOS_THREADS */
 
 }
 
@@ -339,17 +310,16 @@ void MX_FREERTOS_Init(void) {
  * @retval None
  */
 /* USER CODE END Header_initTask */
-void initTask(void *argument)
-{
-  /* USER CODE BEGIN initTask */
+void initTask(void *argument) {
+	/* USER CODE BEGIN initTask */
 //	f_mount(&SDFatFS, "", 0);
 //	ff_del_syncobj(&SDFatFS.sobj);
 //	SDFatFS.sobj = DMA2BusySemHandle;
-	for(;;){
-		osDelay(1000);
-	}
+//	for (;;) {
+//		osDelay(1000);
+//	}
 	osThreadExit();
-  /* USER CODE END initTask */
+	/* USER CODE END initTask */
 }
 
 /* USER CODE BEGIN Header_dataSendTask */
@@ -359,10 +329,9 @@ void initTask(void *argument)
  * @retval None
  */
 /* USER CODE END Header_dataSendTask */
-void dataSendTask(void *argument)
-{
-  /* USER CODE BEGIN dataSendTask */
-//	size_t freeHeapSize = xPortGetFreeHeapSize();
+void dataSendTask(void *argument) {
+	/* USER CODE BEGIN dataSendTask */
+	size_t freeHeapSize = xPortGetFreeHeapSize();
 	MX_LWIP_Init();
 
 	while (gnetif.ip_addr.addr == 0) {
@@ -392,21 +361,43 @@ void dataSendTask(void *argument)
 					osStatus_t result = osMutexAcquire(dataBusyMutexHandle,
 					osWaitForever);
 					if (result == osOK) {
-						err_t err = mqtt_publish(client, pub_top_name,
-								(uint8_t*) sensorsDataBuffer,
-								sensorsData_attributes.mq_size, 0, 0,
-								mqtt_pub_request_cb, NULL);
-						if (err != ERR_OK) {
-							HAL_GPIO_WritePin(LD1_GPIO_Port, LD1_Pin,
-									GPIO_PIN_SET);
-							sending_errors++;
-						} else {
-							HAL_GPIO_WritePin(LD1_GPIO_Port, LD1_Pin,
-									GPIO_PIN_RESET);
+						err_t err = ERR_CONN;
+//						do {
+//							err = mqtt_publish(client, pub_top_name,
+//									(uint8_t*) sensorsDataBuffer,
+//									sensorsData_attributes.mq_size, 0, 0,
+//									mqtt_pub_request_cb, NULL);
+//						} while (err != ERR_OK);
+						while (err != ERR_OK) {
+							err = mqtt_publish(client, pub_top_name,
+									(uint8_t*) sensorsDataBuffer,
+									sensorsData_attributes.mq_size, 0, 0,
+									mqtt_pub_request_cb, NULL);
+							osDelay(2);
+							if (err != ERR_OK) {
+								HAL_GPIO_WritePin(LD1_GPIO_Port, LD1_Pin,
+										GPIO_PIN_SET);
+								sending_errors++;
+							} else {
+								HAL_GPIO_WritePin(LD1_GPIO_Port, LD1_Pin,
+										GPIO_PIN_RESET);
+							}
 						}
+//						err_t err = mqtt_publish(client, pub_top_name,
+//								(uint8_t*) sensorsDataBuffer,
+//								sensorsData_attributes.mq_size, 0, 0,
+//								mqtt_pub_request_cb, NULL);
+//						if (err != ERR_OK) {
+//							HAL_GPIO_WritePin(LD1_GPIO_Port, LD1_Pin,
+//									GPIO_PIN_SET);
+//							sending_errors++;
+//						} else {
+//							HAL_GPIO_WritePin(LD1_GPIO_Port, LD1_Pin,
+//									GPIO_PIN_RESET);
+//						}
 						osMutexRelease(dataBusyMutexHandle);
 					}
-
+					freeHeapSize = xPortGetFreeHeapSize();
 				} else {
 					HAL_GPIO_WritePin(LD1_GPIO_Port, LD1_Pin, GPIO_PIN_SET);
 				}
@@ -418,9 +409,9 @@ void dataSendTask(void *argument)
 
 		osDelay(device.time_interval);
 //		uxHighWaterMark = uxTaskGetStackHighWaterMark( NULL );
-//		freeHeapSize = xPortGetFreeHeapSize();
+
 	}
-  /* USER CODE END dataSendTask */
+	/* USER CODE END dataSendTask */
 }
 
 /* USER CODE BEGIN Header_collectDataTask */
@@ -430,9 +421,8 @@ void dataSendTask(void *argument)
  * @retval None
  */
 /* USER CODE END Header_collectDataTask */
-void collectDataTask(void *argument)
-{
-  /* USER CODE BEGIN collectDataTask */
+void collectDataTask(void *argument) {
+	/* USER CODE BEGIN collectDataTask */
 
 //	HATSensorTimCallback(NULL);
 //	osTimerStart(HATSensorTimHandle, 100);
@@ -448,9 +438,11 @@ void collectDataTask(void *argument)
 					for (uint16_t i = 0; i < sensorsData_attributes.mq_size;) {
 						// ///collect data from ADC/// //
 						uint16_t data[7] = { 0 };
-						osSemaphoreAcquire(DMA2BusySemHandle, osWaitForever);
+						osSemaphoreAcquire(DMA2BusySemHandle,
+						osWaitForever);
 						HAL_ADC_Start_DMA(&hadc3, (uint32_t*) data, 7);
-						osSemaphoreAcquire(DMA2BusySemHandle, osWaitForever);
+						osSemaphoreAcquire(DMA2BusySemHandle,
+						osWaitForever);
 						osSemaphoreRelease(DMA2BusySemHandle);
 						for (uint8_t j = 0; j < 7; j++, i += 2) {
 							sensorsDataBuffer[i] = data[j] >> 8;
@@ -487,7 +479,7 @@ void collectDataTask(void *argument)
 				osDelay(100);
 		}
 	}
-  /* USER CODE END collectDataTask */
+	/* USER CODE END collectDataTask */
 }
 
 /* USER CODE BEGIN Header_logDataTask */
@@ -497,10 +489,9 @@ void collectDataTask(void *argument)
  * @retval None
  */
 /* USER CODE END Header_logDataTask */
-void logDataTask(void *argument)
-{
-  /* USER CODE BEGIN logDataTask */
-//	osThreadExit();
+void logDataTask(void *argument) {
+	/* USER CODE BEGIN logDataTask */
+	osThreadExit();
 	for (;;) {
 //		if (dataBusyMutexHandle != NULL) {
 //			osStatus_t res = osMutexAcquire(dataBusyMutexHandle, osWaitForever);
@@ -511,7 +502,7 @@ void logDataTask(void *argument)
 //		}
 		osDelay(1000);
 	}
-  /* USER CODE END logDataTask */
+	/* USER CODE END logDataTask */
 }
 
 /* USER CODE BEGIN Header_logStatusTask */
@@ -521,10 +512,9 @@ void logDataTask(void *argument)
  * @retval None
  */
 /* USER CODE END Header_logStatusTask */
-void logStatusTask(void *argument)
-{
-  /* USER CODE BEGIN logStatusTask */
-//	osThreadExit();
+void logStatusTask(void *argument) {
+	/* USER CODE BEGIN logStatusTask */
+	osThreadExit();
 //	char log_info[255];
 //	FIL logFile;
 //	FRESULT f_res;
@@ -558,7 +548,7 @@ void logStatusTask(void *argument)
 //		}
 		osDelay(1000);
 	}
-  /* USER CODE END logStatusTask */
+	/* USER CODE END logStatusTask */
 }
 
 /* USER CODE BEGIN Header_screenRefreshTask */
@@ -568,9 +558,8 @@ void logStatusTask(void *argument)
  * @retval None
  */
 /* USER CODE END Header_screenRefreshTask */
-void screenRefreshTask(void *argument)
-{
-  /* USER CODE BEGIN screenRefreshTask */
+void screenRefreshTask(void *argument) {
+	/* USER CODE BEGIN screenRefreshTask */
 	uint8_t status = screen_init();
 
 	if (!status) {
@@ -616,7 +605,7 @@ void screenRefreshTask(void *argument)
 		}
 		osDelay(30000);
 	}
-  /* USER CODE END screenRefreshTask */
+	/* USER CODE END screenRefreshTask */
 }
 
 /* USER CODE BEGIN Header_HATSCollectTask */
@@ -626,9 +615,8 @@ void screenRefreshTask(void *argument)
  * @retval None
  */
 /* USER CODE END Header_HATSCollectTask */
-void HATSCollectTask(void *argument)
-{
-  /* USER CODE BEGIN HATSCollectTask */
+void HATSCollectTask(void *argument) {
+	/* USER CODE BEGIN HATSCollectTask */
 	Max31865_init(&max_1, &hspi4, SPI_TCS1_GPIO_Port, SPI_TCS1_Pin, 2, 50);
 	Max31865_init(&max_2, &hspi4, SPI_TCS2_GPIO_Port, SPI_TCS2_Pin, 2, 50);
 
@@ -646,7 +634,7 @@ void HATSCollectTask(void *argument)
 		}
 		osDelay(500);
 	}
-  /* USER CODE END HATSCollectTask */
+	/* USER CODE END HATSCollectTask */
 }
 
 /* Private application code --------------------------------------------------*/
@@ -771,7 +759,8 @@ static void mqtt_pub_request_cb(void *arg, err_t result) {
 //init eink-display and return stack for a display RAM
 uint8_t screen_init(void) {
 	if (screenBusyMutexHandle != NULL) {
-		osStatus_t res = osMutexAcquire(screenBusyMutexHandle, osWaitForever);
+		osStatus_t res = osMutexAcquire(screenBusyMutexHandle,
+		osWaitForever);
 		if (res == osOK) {
 			DEV_Module_Init();
 			EPD_2IN9BC_Init();
