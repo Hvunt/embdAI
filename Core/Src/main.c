@@ -54,13 +54,12 @@
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
 //#define STRING_VALUE_DIVIDER ('_')
-
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-
+extern volatile uint8_t timer_ready_flag;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -122,9 +121,9 @@ int main(void)
   MX_SPI3_Init();
   MX_SPI4_Init();
   MX_TIM4_Init();
-  MX_TIM6_Init();
   MX_UART5_Init();
   MX_RTC_Init();
+  MX_TIM6_Init();
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
@@ -144,7 +143,6 @@ int main(void)
 //	//default settings for device
 //	deviceAction.action = ACTION_STOP;
 //	deviceSettingsInit((DeviceSettings_t *) &deviceSettings);
-
 	while (1) {
 //		if (new_data_flag) {
 //			new_data_flag = 0;
@@ -397,7 +395,6 @@ void SystemClock_Config(void)
 //			deviceAction.action = ACTION_STOP;
 //	}
 //}
-
 /* USER CODE END 4 */
 
 /**
@@ -417,7 +414,17 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
     HAL_IncTick();
   }
   /* USER CODE BEGIN Callback 1 */
-
+	if (htim->Instance == TIM6) {
+		timer_ready_flag = TIM6->SR & TIM_SR_UIF;
+		if (timer_ready_flag)
+			HAL_TIM_Base_Stop_IT(htim);
+//		if (temp) {
+//			timer_ready_flag = 1;
+//			htim->Instance->SR &= ~0x1;
+//		}
+//	  HAL_GPIO_TogglePin(LD3_GPIO_Port, LD3_Pin);
+//	  HAL_TIM_Base_Start_IT(&htim6);
+	}
   /* USER CODE END Callback 1 */
 }
 

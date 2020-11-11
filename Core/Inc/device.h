@@ -52,6 +52,7 @@ typedef struct DeviceSettings{
 	//time interval between each measured data packets
 	uint16_t time_interval;			//100..10000 ms
 	uint16_t samples;				//samples count 15...20
+	volatile uint32_t measurements_counter;
 
 	uint8_t sd_card_record;			//0..3 -- type of the recording and transmitting the data
 
