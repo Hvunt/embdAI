@@ -414,17 +414,17 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
     HAL_IncTick();
   }
   /* USER CODE BEGIN Callback 1 */
-	if (htim->Instance == TIM6) {
-		timer_ready_flag = TIM6->SR & TIM_SR_UIF;
-		if (timer_ready_flag)
-			HAL_TIM_Base_Stop_IT(htim);
-//		if (temp) {
-//			timer_ready_flag = 1;
-//			htim->Instance->SR &= ~0x1;
-//		}
-//	  HAL_GPIO_TogglePin(LD3_GPIO_Port, LD3_Pin);
-//	  HAL_TIM_Base_Start_IT(&htim6);
-	}
+//	if (htim->Instance == TIM6) {
+//		timer_ready_flag = TIM6->SR & TIM_SR_UIF;
+//		if (timer_ready_flag)
+//			HAL_TIM_Base_Stop_IT(htim);
+////		if (temp) {
+////			timer_ready_flag = 1;
+////			htim->Instance->SR &= ~0x1;
+////		}
+////	  HAL_GPIO_TogglePin(LD3_GPIO_Port, LD3_Pin);
+////	  HAL_TIM_Base_Start_IT(&htim6);
+//	}
   /* USER CODE END Callback 1 */
 }
 

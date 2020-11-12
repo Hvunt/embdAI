@@ -55,12 +55,7 @@
 typedef StaticQueue_t osStaticMessageQDef_t;
 /* USER CODE BEGIN PTD */
 enum einkDrawDataTypes {
-	EDDT_IP = 0,
-	EDDT_CONNECTION_STATUS,
-	EDDT_ERROR,
-	EDDT_STATUS,
-	EDDT_TIME,
-	EDDT_UUID
+	EDDT_IP = 0, EDDT_CONNECTION_STATUS, EDDT_ERROR, EDDT_STATUS, EDDT_TIME, EDDT_UUID
 };
 typedef struct einkDrawData {
 	uint8_t type;
@@ -68,10 +63,6 @@ typedef struct einkDrawData {
 	uint16_t length;
 } einkDrawData_t;
 
-//typedef struct sensorsDataFrame {
-//	uint8_t data[9];
-//	uint8_t
-//} sensorsDataFrame;
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -80,14 +71,19 @@ typedef struct einkDrawData {
 #define SUB_TOPIC_NAME 	"devices/settings"
 
 static const char PUB_TOPIC_NAME_POST_DATA[] = "/sensors";
+static const char PUB_TOPIC_NAME_POST_PING[] = "/ping";
 //static const char PUB_TOPIC_NAME_POST_SETTINGS[] = "/settings";
 static const char PUB_TOPIC_NAME_PRED[] = "devices/";
 
 #define DEVICE_LOGIN	"test_device"
 #define DEVICE_PASSWORD "4556"
 
-#define FRAME_SIZE 250
-#define FRAME_HEAD_LENGTH 6
+#define FRAME_SIZE 				300
+#define FRAME_HEAD_LENGTH 		6
+
+#define MSG_DATA_READY 				0x01
+#define MSG_COLLECT 				0x02
+#define MSG_PACKET_HAS_BEEN_SENT 	0x03
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -116,48 +112,42 @@ volatile uint8_t HATS_new_data = 0;
 
 volatile uint32_t measurements_counter = 0;
 
-const osThreadAttr_t screenInit_attributes = { .name = "screenInit", .priority =
-		(osPriority_t) osPriorityNormal, .stack_size = 256 * 4 };
+const osThreadAttr_t screenInit_attributes = { .name = "screenInit", .priority = (osPriority_t) osPriorityNormal, .stack_size = 256 * 4 };
 
-volatile uint8_t timer_ready_flag = 0;
+//volatile uint8_t timer_ready_flag = 0;
+
+osEventFlagsId_t data_evnt_id;
+//osEventFlagsId_t data_sent_evnt_id;
 /* USER CODE END Variables */
 /* Definitions for init */
 osThreadId_t initHandle;
-const osThreadAttr_t init_attributes = { .name = "init", .priority =
-		(osPriority_t) osPriorityLow7, .stack_size = 128 * 4 };
+const osThreadAttr_t init_attributes = { .name = "init", .priority = (osPriority_t) osPriorityLow7, .stack_size = 128 * 4 };
 /* Definitions for dataSend */
 osThreadId_t dataSendHandle;
-const osThreadAttr_t dataSend_attributes = { .name = "dataSend", .priority =
-		(osPriority_t) osPriorityBelowNormal, .stack_size = 380 * 4 };
+const osThreadAttr_t dataSend_attributes = { .name = "dataSend", .priority = (osPriority_t) osPriorityBelowNormal, .stack_size = 450 * 4 };
 /* Definitions for collectData */
 osThreadId_t collectDataHandle;
-const osThreadAttr_t collectData_attributes =
-		{ .name = "collectData", .priority =
-				(osPriority_t) osPriorityBelowNormal, .stack_size = 128 * 4 };
+const osThreadAttr_t collectData_attributes = { .name = "collectData", .priority = (osPriority_t) osPriorityBelowNormal, .stack_size = 128
+		* 4 };
 /* Definitions for logData */
 osThreadId_t logDataHandle;
-const osThreadAttr_t logData_attributes = { .name = "logData", .priority =
-		(osPriority_t) osPriorityLow4, .stack_size = 128 * 4 };
+const osThreadAttr_t logData_attributes = { .name = "logData", .priority = (osPriority_t) osPriorityLow4, .stack_size = 128 * 4 };
 /* Definitions for logStatus */
 osThreadId_t logStatusHandle;
-const osThreadAttr_t logStatus_attributes = { .name = "logStatus", .priority =
-		(osPriority_t) osPriorityLow4, .stack_size = 128 * 4 };
+const osThreadAttr_t logStatus_attributes = { .name = "logStatus", .priority = (osPriority_t) osPriorityLow4, .stack_size = 128 * 4 };
 /* Definitions for screenRefresh */
 osThreadId_t screenRefreshHandle;
-const osThreadAttr_t screenRefresh_attributes = { .name = "screenRefresh",
-		.priority = (osPriority_t) osPriorityLow6, .stack_size = 200 * 4 };
+const osThreadAttr_t screenRefresh_attributes =
+		{ .name = "screenRefresh", .priority = (osPriority_t) osPriorityLow6, .stack_size = 200 * 4 };
 /* Definitions for HATSCollect */
 osThreadId_t HATSCollectHandle;
-const osThreadAttr_t HATSCollect_attributes = { .name = "HATSCollect",
-		.priority = (osPriority_t) osPriorityLow6, .stack_size = 150 * 4 };
+const osThreadAttr_t HATSCollect_attributes = { .name = "HATSCollect", .priority = (osPriority_t) osPriorityLow6, .stack_size = 150 * 4 };
 /* Definitions for sensorsData */
 osMessageQueueId_t sensorsDataHandle;
 uint8_t sensorsDataBuffer[18000 * sizeof(uint8_t)];
 osStaticMessageQDef_t sensorsDataControlBlock;
-const osMessageQueueAttr_t sensorsData_attributes = { .name = "sensorsData",
-		.cb_mem = &sensorsDataControlBlock, .cb_size =
-				sizeof(sensorsDataControlBlock), .mq_mem = &sensorsDataBuffer,
-		.mq_size = sizeof(sensorsDataBuffer) };
+const osMessageQueueAttr_t sensorsData_attributes = { .name = "sensorsData", .cb_mem = &sensorsDataControlBlock, .cb_size =
+		sizeof(sensorsDataControlBlock), .mq_mem = &sensorsDataBuffer, .mq_size = sizeof(sensorsDataBuffer) };
 /* Definitions for dataBusyMutex */
 osMutexId_t dataBusyMutexHandle;
 const osMutexAttr_t dataBusyMutex_attributes = { .name = "dataBusyMutex" };
@@ -175,8 +165,7 @@ osSemaphoreId_t DMA2BusySemHandle;
 const osSemaphoreAttr_t DMA2BusySem_attributes = { .name = "DMA2BusySem" };
 /* Definitions for dataProcessingSem */
 osSemaphoreId_t dataProcessingSemHandle;
-const osSemaphoreAttr_t dataProcessingSem_attributes = { .name =
-		"dataProcessingSem" };
+const osSemaphoreAttr_t dataProcessingSem_attributes = { .name = "dataProcessingSem" };
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
@@ -189,12 +178,9 @@ void drawMessageTask(void *message);
 //MQTT connection
 void connect_to_server(mqtt_client_t *client);
 void serverFound(const char *name, const ip_addr_t *ip_addr, void *arg);
-static void mqtt_connection_cb(mqtt_client_t *client, void *arg,
-		mqtt_connection_status_t status);
-static void mqtt_incoming_data_cb(void *arg, const uint8_t *data, uint16_t len,
-		uint8_t flags);
-static void mqtt_incoming_publish_cb(void *arg, const char *topic,
-		u32_t tot_len);
+static void mqtt_connection_cb(mqtt_client_t *client, void *arg, mqtt_connection_status_t status);
+static void mqtt_incoming_data_cb(void *arg, const uint8_t *data, uint16_t len, uint8_t flags);
+static void mqtt_incoming_publish_cb(void *arg, const char *topic, u32_t tot_len);
 static void mqtt_pub_request_cb(void *arg, err_t result);
 static void mqtt_sub_request_cb(void *arg, err_t result);
 
@@ -243,6 +229,9 @@ void MX_FREERTOS_Init(void) {
 	getDeviceID(deviceID);
 	deviceSettingsInit(&device);
 	deviceSetID(&device, deviceID, sizeof(deviceID));
+
+	data_evnt_id = osEventFlagsNew(NULL);
+//	data_sent_evnt_id = osEventFlagsNew(NULL);
 	/* USER CODE END Init */
 	/* Create the mutex(es) */
 	/* creation of dataBusyMutex */
@@ -265,8 +254,7 @@ void MX_FREERTOS_Init(void) {
 	DMA2BusySemHandle = osSemaphoreNew(1, 1, &DMA2BusySem_attributes);
 
 	/* creation of dataProcessingSem */
-	dataProcessingSemHandle = osSemaphoreNew(2, 2,
-			&dataProcessingSem_attributes);
+	dataProcessingSemHandle = osSemaphoreNew(2, 2, &dataProcessingSem_attributes);
 
 	/* USER CODE BEGIN RTOS_SEMAPHORES */
 	/* USER CODE END RTOS_SEMAPHORES */
@@ -277,8 +265,7 @@ void MX_FREERTOS_Init(void) {
 
 	/* Create the queue(s) */
 	/* creation of sensorsData */
-	sensorsDataHandle = osMessageQueueNew(18000, sizeof(uint8_t),
-			&sensorsData_attributes);
+	sensorsDataHandle = osMessageQueueNew(18000, sizeof(uint8_t), &sensorsData_attributes);
 
 	/* USER CODE BEGIN RTOS_QUEUES */
 	/* add queues, ... */
@@ -292,8 +279,7 @@ void MX_FREERTOS_Init(void) {
 	dataSendHandle = osThreadNew(dataSendTask, NULL, &dataSend_attributes);
 
 	/* creation of collectData */
-	collectDataHandle = osThreadNew(collectDataTask, NULL,
-			&collectData_attributes);
+	collectDataHandle = osThreadNew(collectDataTask, NULL, &collectData_attributes);
 
 	/* creation of logData */
 	logDataHandle = osThreadNew(logDataTask, NULL, &logData_attributes);
@@ -302,16 +288,13 @@ void MX_FREERTOS_Init(void) {
 	logStatusHandle = osThreadNew(logStatusTask, NULL, &logStatus_attributes);
 
 	/* creation of screenRefresh */
-	screenRefreshHandle = osThreadNew(screenRefreshTask, NULL,
-			&screenRefresh_attributes);
+	screenRefreshHandle = osThreadNew(screenRefreshTask, NULL, &screenRefresh_attributes);
 
 	/* creation of HATSCollect */
-	HATSCollectHandle = osThreadNew(HATSCollectTask, NULL,
-			&HATSCollect_attributes);
+	HATSCollectHandle = osThreadNew(HATSCollectTask, NULL, &HATSCollect_attributes);
 
 	/* USER CODE BEGIN RTOS_THREADS */
 
-//	osThreadNew(screenInitTask, NULL, &screenInit_attributes);
 	/* USER CODE END RTOS_THREADS */
 
 }
@@ -359,13 +342,13 @@ void dataSendTask(void *argument) {
 	}
 
 	//make topic name: device/[UUID]/sensor
-	size_t pub_top_name_len = sizeof(device.deviceID) - 2
-			+ sizeof(PUB_TOPIC_NAME_PRED) + sizeof(PUB_TOPIC_NAME_POST_DATA);
+	size_t pub_top_name_len = sizeof(device.deviceID) - 2 + sizeof(PUB_TOPIC_NAME_PRED) + sizeof(PUB_TOPIC_NAME_POST_DATA);
 	char pub_top_name[pub_top_name_len];
 	makePubTopicName(pub_top_name, pub_top_name_len);
 
 	uint16_t sending_errors = 0;
 	uint8_t tx_buffer[FRAME_SIZE + FRAME_HEAD_LENGTH] = { 0 };
+	uint8_t packets_count = 0;
 
 	device.device_status = DEVICE_STATUS_AWAITING;
 //	deviceState.action = ACTION_RUN;
@@ -373,44 +356,48 @@ void dataSendTask(void *argument) {
 		if (deviceState.action == ACTION_RUN) {
 			if (mqtt_client_is_connected(client)) {
 				if (dataBusyMutexHandle != NULL) {
-					osStatus_t result = osMutexAcquire(dataBusyMutexHandle,
-					osWaitForever);
-					if (result == osOK) {
-						uint8_t packets_count = sensorsData_attributes.mq_size
-								/ FRAME_SIZE;
-						for (uint8_t i = 0, frame_count = 1;
-								frame_count <= packets_count;
-								frame_count++, i +=
-								FRAME_SIZE) {
-							tx_buffer[0] = device.measurements_counter << 24;
-							tx_buffer[1] = device.measurements_counter << 16;
-							tx_buffer[2] = device.measurements_counter << 8;
-							tx_buffer[3] = device.measurements_counter;
-							tx_buffer[4] = frame_count;
-							tx_buffer[5] = packets_count;
-							for (uint16_t j = 6;
-									j < FRAME_SIZE + FRAME_HEAD_LENGTH; j++) {
-								tx_buffer[j] = sensorsDataBuffer[i + j];
-							}
-							err_t err = ERR_CONN;
-							while (err != ERR_OK) {
-								err = mqtt_publish(client, pub_top_name,
-										(uint8_t*) tx_buffer, sizeof(tx_buffer),
-										0, 0, mqtt_pub_request_cb, NULL);
-
-								if (err != ERR_OK) {
-									HAL_GPIO_WritePin(LD1_GPIO_Port, LD1_Pin,
-											GPIO_PIN_SET);
-									sending_errors++;
-								} else {
-									HAL_GPIO_WritePin(LD1_GPIO_Port, LD1_Pin,
-											GPIO_PIN_RESET);
+					osEventFlagsSet(data_evnt_id, MSG_COLLECT);
+					uint32_t event_flag = osEventFlagsWait(data_evnt_id,
+					MSG_DATA_READY, osFlagsWaitAny, osWaitForever);
+					if (event_flag == MSG_DATA_READY) {
+						osStatus_t result = osMutexAcquire(dataBusyMutexHandle,
+						osWaitForever);
+						if (result == osOK) {
+							packets_count = sensorsData_attributes.mq_size / FRAME_SIZE;
+							for (uint32_t i = 0, frame_count = 1; frame_count <= packets_count; frame_count++, i +=
+							FRAME_SIZE) {
+//								clean_buff(tx_buffer, sizeof(tx_buffer));
+								tx_buffer[0] = device.measurements_counter << 24;
+								tx_buffer[1] = device.measurements_counter << 16;
+								tx_buffer[2] = device.measurements_counter << 8;
+								tx_buffer[3] = device.measurements_counter;
+								tx_buffer[4] = frame_count;
+								tx_buffer[5] = packets_count;
+								for (uint32_t j = 0; j < FRAME_SIZE + FRAME_HEAD_LENGTH; j++) {
+									tx_buffer[j + FRAME_HEAD_LENGTH] = sensorsDataBuffer[i + j];
 								}
-								osDelay(10);
+								err_t err = ERR_CONN;
+								while (err != ERR_OK) {
+									err = mqtt_publish(client, pub_top_name, (uint8_t*) tx_buffer, sizeof(tx_buffer), 0, 0,
+											mqtt_pub_request_cb, NULL);
+
+									if (err != ERR_OK) {
+										HAL_GPIO_WritePin(LD1_GPIO_Port,
+										LD1_Pin, GPIO_PIN_SET);
+										sending_errors++;
+									} else {
+										HAL_GPIO_WritePin(LD1_GPIO_Port,
+										LD1_Pin, GPIO_PIN_RESET);
+									}
+									osDelay(10);
+								}
+//								osDelay(250);
+								osEventFlagsWait(data_evnt_id,
+								MSG_PACKET_HAS_BEEN_SENT, osFlagsWaitAny, osWaitForever);
 							}
-							osDelay(150);
+							osMutexRelease(dataBusyMutexHandle);
+							device.measurements_counter++;
 						}
-						osMutexRelease(dataBusyMutexHandle);
 					}
 				} else {
 					HAL_GPIO_WritePin(LD1_GPIO_Port, LD1_Pin, GPIO_PIN_SET);
@@ -419,7 +406,7 @@ void dataSendTask(void *argument) {
 				osDelay(2000);
 				connect_to_server(client);
 			}
-			osDelay(30000);
+			osDelay(20000);
 		} else
 			osDelay(10);
 //		if (deviceState.action == ACTION_RUN) {
@@ -477,63 +464,61 @@ void collectDataTask(void *argument) {
 
 		if (dataBusyMutexHandle != NULL) {
 			if (deviceState.action == ACTION_RUN) {
-				osStatus_t res = osMutexAcquire(dataBusyMutexHandle,
-				osWaitForever);
-				if (res == osOK) {
-					clean_buff(sensorsDataBuffer,
-							sensorsData_attributes.mq_size);
+				uint32_t event_flag = osEventFlagsWait(data_evnt_id,
+				MSG_COLLECT, osFlagsWaitAny, osWaitForever);
+				if (event_flag == MSG_COLLECT) {
+					osStatus_t res = osMutexAcquire(dataBusyMutexHandle,
+					osWaitForever);
+					if (res == osOK) {
+						clean_buff(sensorsDataBuffer, sensorsData_attributes.mq_size);
 
-					uint32_t start_ticks = osKernelGetTickCount();
-					uint32_t now_ticks = start_ticks;
+//						uint32_t start_ticks = osKernelGetTickCount();
+//						uint32_t now_ticks = start_ticks;
 
-//					__HAL_TIM_SET_COUNTER(&htim6, 1);
-//					HAL_TIM_Base_Start_IT(&htim6);
-					for (uint16_t i = 0; (i < sensorsData_attributes.mq_size)/*
-					 || (timer_ready_flag == 0)*/;) {
-						// ///collect data from ADC/// //
-						uint16_t data[7] = { 0 };
-						osSemaphoreAcquire(DMA2BusySemHandle,
-						osWaitForever);
-						HAL_ADC_Start_DMA(&hadc3, (uint32_t*) data, 7);
-						osSemaphoreAcquire(DMA2BusySemHandle,
-						osWaitForever);
-						osSemaphoreRelease(DMA2BusySemHandle);
-						for (uint8_t j = 0; j < 7; j++, i += 2) {
-							sensorsDataBuffer[i] = data[j] >> 8;
-							sensorsDataBuffer[i + 1] = data[j];
+						for (uint16_t i = 0; (i < sensorsData_attributes.mq_size);) {
+							// ///collect data from ADC/// //
+							uint16_t data[7] = { 0 };
+							osSemaphoreAcquire(DMA2BusySemHandle,
+							osWaitForever);
+							HAL_ADC_Start_DMA(&hadc3, (uint32_t*) data, 7);
+							osSemaphoreAcquire(DMA2BusySemHandle,
+							osWaitForever);
+							osSemaphoreRelease(DMA2BusySemHandle);
+							for (uint8_t j = 0; j < 7; j++, i += 2) {
+								sensorsDataBuffer[i] = data[j] >> 8;
+								sensorsDataBuffer[i + 1] = data[j];
+							}
+
+							// ///collect data from MAX31865/// //
+							osMutexAcquire(HATSMutexHandle, osWaitForever);
+							if (HATS_temp_1 < 1000) {
+								temp = HATS_temp_1;
+								sensorsDataBuffer[i] = temp >> 8;
+								sensorsDataBuffer[i + 1] = temp;
+							} else {
+								sensorsDataBuffer[i] = 0xFF;
+								sensorsDataBuffer[i + 1] = 0xFF;
+							}
+
+							i += 2;
+							if (HATS_temp_2 < 1000) {
+								temp = HATS_temp_2;
+								sensorsDataBuffer[i] = temp >> 8;
+								sensorsDataBuffer[i + 1] = temp;
+							} else {
+								sensorsDataBuffer[i] = 0xFF;
+								sensorsDataBuffer[i + 1] = 0xFF;
+							}
+							osMutexRelease(HATSMutexHandle);
+							i += 2;
 						}
 
-						// ///collect data from MAX31865/// //
-						osMutexAcquire(HATSMutexHandle, osWaitForever);
-						if (HATS_temp_1 < 1000) {
-							temp = HATS_temp_1;
-							sensorsDataBuffer[i] = temp >> 8;
-							sensorsDataBuffer[i + 1] = temp;
-						} else {
-							sensorsDataBuffer[i] = 0xFF;
-							sensorsDataBuffer[i + 1] = 0xFF;
-						}
+//					now_ticks = osKernelGetTickCount();
+//					now_ticks -= start_ticks;
 
-						i += 2;
-						if (HATS_temp_2 < 1000) {
-							temp = HATS_temp_2;
-							sensorsDataBuffer[i] = temp >> 8;
-							sensorsDataBuffer[i + 1] = temp;
-						} else {
-							sensorsDataBuffer[i] = 0xFF;
-							sensorsDataBuffer[i + 1] = 0xFF;
-						}
-						osMutexRelease(HATSMutexHandle);
-						i += 2;
+						osMutexRelease(dataBusyMutexHandle);
+						osEventFlagsSet(data_evnt_id, MSG_DATA_READY);
 					}
-					device.measurements_counter++;
-					now_ticks = osKernelGetTickCount();
-					now_ticks -= start_ticks;
-
-//					now_ticks = HAL_GetTick();
-//					timer_ready_flag = 0;
-					osMutexRelease(dataBusyMutexHandle);
-					osDelay(100);
 				}
 			} else
 				osDelay(10);
@@ -639,8 +624,7 @@ void screenRefreshTask(void *argument) {
 //				Paint_DrawBitMap(gImage_pepega);
 				char data[40] = { 0 };
 
-				Paint_DrawLine(1, 1, 100, 0, BLACK, DOT_PIXEL_1X1,
-						LINE_STYLE_SOLID);
+				Paint_DrawLine(1, 1, 100, 0, BLACK, DOT_PIXEL_1X1, LINE_STYLE_SOLID);
 				sprintf(data, "Status code: %d", device.device_status);
 				Paint_DrawString_EN(5, 16, data, &Font16, BLACK,
 				WHITE);
@@ -733,23 +717,19 @@ void connect_to_server(mqtt_client_t *client) {
 	ci.client_user = DEVICE_LOGIN;
 	ci.client_pass = DEVICE_PASSWORD;
 	ip4addr_aton(SERVER_ADDRESS, &server_addr);
-	err = mqtt_client_connect(client, &server_addr, MQTT_PORT,
-			mqtt_connection_cb,
-			NULL, &ci);
+	err = mqtt_client_connect(client, &server_addr, MQTT_PORT, mqtt_connection_cb,
+	NULL, &ci);
 	if (err != ERR_OK) {
 		HAL_GPIO_WritePin(LD1_GPIO_Port, LD1_Pin, GPIO_PIN_SET);
 	} else
 		HAL_GPIO_WritePin(LD1_GPIO_Port, LD1_Pin, GPIO_PIN_RESET);
 }
 
-static void mqtt_connection_cb(mqtt_client_t *client, void *arg,
-		mqtt_connection_status_t status) {
+static void mqtt_connection_cb(mqtt_client_t *client, void *arg, mqtt_connection_status_t status) {
 	err_t err;
 	if (status == MQTT_CONNECT_ACCEPTED) {
-		mqtt_set_inpub_callback(client, mqtt_incoming_publish_cb,
-				mqtt_incoming_data_cb, arg);
-		err = mqtt_subscribe(client, SUB_TOPIC_NAME, 1, mqtt_sub_request_cb,
-				arg);
+		mqtt_set_inpub_callback(client, mqtt_incoming_publish_cb, mqtt_incoming_data_cb, arg);
+		err = mqtt_subscribe(client, SUB_TOPIC_NAME, 1, mqtt_sub_request_cb, arg);
 		if (err != ERR_OK) {
 			HAL_GPIO_WritePin(LD1_GPIO_Port, LD1_Pin, GPIO_PIN_SET);
 		} else
@@ -771,13 +751,11 @@ static void mqtt_sub_request_cb(void *arg, err_t result) {
 	}
 }
 
-static void mqtt_incoming_publish_cb(void *arg, const char *topic,
-		uint32_t top_len) {
+static void mqtt_incoming_publish_cb(void *arg, const char *topic, uint32_t top_len) {
 
 }
 
-static void mqtt_incoming_data_cb(void *arg, const uint8_t *data, uint16_t len,
-		uint8_t flags) {
+static void mqtt_incoming_data_cb(void *arg, const uint8_t *data, uint16_t len, uint8_t flags) {
 	if (len > 0) {
 		switch (data[0]) {
 		case ACTION_RUN:
@@ -796,6 +774,7 @@ static void mqtt_incoming_data_cb(void *arg, const uint8_t *data, uint16_t len,
 
 static void mqtt_pub_request_cb(void *arg, err_t result) {
 	HAL_GPIO_TogglePin(LD3_GPIO_Port, LD3_Pin);
+	osEventFlagsSet(data_evnt_id, MSG_PACKET_HAS_BEEN_SENT);
 }
 
 ////////////////display section/////////////////////////
@@ -826,10 +805,7 @@ uint8_t screen_init(void) {
 			EPD_2IN9BC_Init();
 			EPD_2IN9BC_Clear();
 
-			UWORD image_size = (
-					(EPD_2IN9BC_WIDTH % 8 == 0) ?
-							(EPD_2IN9BC_WIDTH / 8) : (EPD_2IN9BC_WIDTH / 8 + 1))
-					* EPD_2IN9BC_HEIGHT;
+			UWORD image_size = ((EPD_2IN9BC_WIDTH % 8 == 0) ? (EPD_2IN9BC_WIDTH / 8) : (EPD_2IN9BC_WIDTH / 8 + 1)) * EPD_2IN9BC_HEIGHT;
 			if ((BlackImage = (UBYTE*) pvPortMalloc(image_size)) == NULL) {
 				HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
 				EPD_2IN9BC_Sleep();
@@ -880,8 +856,7 @@ static void makePubTopicName(char *out, size_t out_len) {
 	if (out != NULL) {
 		strncpy(out, PUB_TOPIC_NAME_PRED, sizeof(PUB_TOPIC_NAME_PRED));
 		strncat(out, device.deviceID, sizeof(device.deviceID));
-		strncat(out, PUB_TOPIC_NAME_POST_DATA,
-				sizeof(PUB_TOPIC_NAME_POST_DATA));
+		strncat(out, PUB_TOPIC_NAME_POST_DATA, sizeof(PUB_TOPIC_NAME_POST_DATA));
 	}
 }
 

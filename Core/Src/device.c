@@ -15,6 +15,7 @@ void deviceSettingsInit(DeviceSettings_t *deviceSettings) {
 	deviceSettings->ha_t_sens_count = 2;
 	deviceSettings->time_interval = 100;
 	deviceSettings->use_mic = 0;
+	deviceSettings->measurements_counter = 1;
 }
 
 uint16_t deviceGetSetting(DeviceSettings_t *deviceSettings, uint8_t Reg) {
