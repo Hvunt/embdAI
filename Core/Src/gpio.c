@@ -61,7 +61,7 @@ void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(EID_RST_GPIO_Port, EID_RST_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOE, SPI_TCS2_Pin|SPI_TCS1_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOE, SPI_TCS1_Pin|SPI_TCS2_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(EID_CS_GPIO_Port, EID_CS_Pin, GPIO_PIN_RESET);
@@ -94,7 +94,7 @@ void MX_GPIO_Init(void)
   HAL_GPIO_Init(EID_RST_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : PEPin PEPin */
-  GPIO_InitStruct.Pin = SPI_TCS2_Pin|SPI_TCS1_Pin;
+  GPIO_InitStruct.Pin = SPI_TCS1_Pin|SPI_TCS2_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;

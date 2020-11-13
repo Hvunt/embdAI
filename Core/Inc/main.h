@@ -61,7 +61,7 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define MQTT_OUTPUT_RINGBUF_SIZE 3096
+#define MQTT_OUTPUT_RINGBUF_SIZE 2048
 #define MQTT_REQ_MAX_IN_FLIGHT 10
 #define USER_Btn_Pin GPIO_PIN_13
 #define USER_Btn_GPIO_Port GPIOC
@@ -72,10 +72,10 @@ void Error_Handler(void);
 #define LD1_GPIO_Port GPIOB
 #define EID_RST_Pin GPIO_PIN_12
 #define EID_RST_GPIO_Port GPIOF
-#define SPI_TCS2_Pin GPIO_PIN_8
-#define SPI_TCS2_GPIO_Port GPIOE
-#define SPI_TCS1_Pin GPIO_PIN_15
+#define SPI_TCS1_Pin GPIO_PIN_8
 #define SPI_TCS1_GPIO_Port GPIOE
+#define SPI_TCS2_Pin GPIO_PIN_15
+#define SPI_TCS2_GPIO_Port GPIOE
 #define LD3_Pin GPIO_PIN_14
 #define LD3_GPIO_Port GPIOB
 #define LED_STATUS_Pin GPIO_PIN_12
