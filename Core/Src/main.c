@@ -23,8 +23,6 @@
 #include "adc.h"
 #include "crc.h"
 #include "dma.h"
-#include "iwdg.h"
-#include "mbedtls.h"
 #include "rng.h"
 #include "rtc.h"
 #include "sdmmc.h"
@@ -112,8 +110,9 @@ int main(void)
   MX_UART5_Init();
   MX_RTC_Init();
   MX_TIM6_Init();
+  MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
-
+  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
   /* USER CODE END 2 */
 
   /* Init scheduler */
@@ -154,12 +153,10 @@ void SystemClock_Config(void)
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI|RCC_OSCILLATORTYPE_LSI
-                              |RCC_OSCILLATORTYPE_LSE;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI|RCC_OSCILLATORTYPE_LSE;
   RCC_OscInitStruct.LSEState = RCC_LSE_ON;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
   RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
-  RCC_OscInitStruct.LSIState = RCC_LSI_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
   RCC_OscInitStruct.PLL.PLLM = 8;
@@ -189,9 +186,11 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
-  PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_RTC|RCC_PERIPHCLK_UART5
-                              |RCC_PERIPHCLK_SDMMC1|RCC_PERIPHCLK_CLK48;
+  PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_RTC|RCC_PERIPHCLK_USART2
+                              |RCC_PERIPHCLK_UART5|RCC_PERIPHCLK_SDMMC1
+                              |RCC_PERIPHCLK_CLK48;
   PeriphClkInitStruct.RTCClockSelection = RCC_RTCCLKSOURCE_LSE;
+  PeriphClkInitStruct.Usart2ClockSelection = RCC_USART2CLKSOURCE_PCLK1;
   PeriphClkInitStruct.Uart5ClockSelection = RCC_UART5CLKSOURCE_PCLK1;
   PeriphClkInitStruct.Clk48ClockSelection = RCC_CLK48SOURCE_PLL;
   PeriphClkInitStruct.Sdmmc1ClockSelection = RCC_SDMMC1CLKSOURCE_CLK48;
@@ -205,7 +204,7 @@ void SystemClock_Config(void)
 
 /* USER CODE END 4 */
 
-/**
+ /**
   * @brief  Period elapsed callback in non blocking mode
   * @note   This function is called  when TIM7 interrupt took place, inside
   * HAL_TIM_IRQHandler(). It makes a direct call to HAL_IncTick() to increment

@@ -19,6 +19,7 @@
 
 #define ACTION_RUN			('r')
 #define ACTION_STOP			('s')
+#define ACTION_UPDATE		('u')
 #define ACTION_GET			('g')
 #define ACTION_SET			('e')
 

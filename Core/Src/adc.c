@@ -1,12 +1,12 @@
 /**
   ******************************************************************************
-  * File Name          : ADC.c
-  * Description        : This file provides code for the configuration
-  *                      of the ADC instances.
+  * @file    adc.c
+  * @brief   This file provides code for the configuration
+  *          of the ADC instances.
   ******************************************************************************
   * @attention
   *
-  * <h2><center>&copy; Copyright (c) 2020 STMicroelectronics.
+  * <h2><center>&copy; Copyright (c) 2021 STMicroelectronics.
   * All rights reserved.</center></h2>
   *
   * This software component is licensed by ST under Ultimate Liberty license
@@ -127,6 +127,7 @@ void HAL_ADC_MspInit(ADC_HandleTypeDef* adcHandle)
     __HAL_RCC_GPIOA_CLK_ENABLE();
     /**ADC3 GPIO Configuration
     PF3     ------> ADC3_IN9
+    PF5     ------> ADC3_IN15
     PF7     ------> ADC3_IN5
     PF8     ------> ADC3_IN6
     PF9     ------> ADC3_IN7
@@ -134,7 +135,8 @@ void HAL_ADC_MspInit(ADC_HandleTypeDef* adcHandle)
     PC3     ------> ADC3_IN13
     PA3     ------> ADC3_IN3
     */
-    GPIO_InitStruct.Pin = GPIO_PIN_3|GPIO_PIN_7|GPIO_PIN_8|GPIO_PIN_9;
+    GPIO_InitStruct.Pin = GPIO_PIN_3|GPIO_PIN_5|GPIO_PIN_7|GPIO_PIN_8
+                          |GPIO_PIN_9;
     GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     HAL_GPIO_Init(GPIOF, &GPIO_InitStruct);
@@ -190,6 +192,7 @@ void HAL_ADC_MspDeInit(ADC_HandleTypeDef* adcHandle)
 
     /**ADC3 GPIO Configuration
     PF3     ------> ADC3_IN9
+    PF5     ------> ADC3_IN15
     PF7     ------> ADC3_IN5
     PF8     ------> ADC3_IN6
     PF9     ------> ADC3_IN7
@@ -197,7 +200,8 @@ void HAL_ADC_MspDeInit(ADC_HandleTypeDef* adcHandle)
     PC3     ------> ADC3_IN13
     PA3     ------> ADC3_IN3
     */
-    HAL_GPIO_DeInit(GPIOF, GPIO_PIN_3|GPIO_PIN_7|GPIO_PIN_8|GPIO_PIN_9);
+    HAL_GPIO_DeInit(GPIOF, GPIO_PIN_3|GPIO_PIN_5|GPIO_PIN_7|GPIO_PIN_8
+                          |GPIO_PIN_9);
 
     HAL_GPIO_DeInit(GPIOC, GPIO_PIN_0|GPIO_PIN_3);
 

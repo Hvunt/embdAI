@@ -99,7 +99,7 @@ void Error_Handler(void);
 #define WIFI_TX_Pin GPIO_PIN_9
 #define WIFI_TX_GPIO_Port GPIOB
 /* USER CODE BEGIN Private defines */
-
+#define LOAD_BOOTLOADER_ADDRESS		  0x081FFFF0
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus
