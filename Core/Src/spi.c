@@ -31,6 +31,13 @@ SPI_HandleTypeDef hspi4;
 void MX_SPI3_Init(void)
 {
 
+  /* USER CODE BEGIN SPI3_Init 0 */
+
+  /* USER CODE END SPI3_Init 0 */
+
+  /* USER CODE BEGIN SPI3_Init 1 */
+
+  /* USER CODE END SPI3_Init 1 */
   hspi3.Instance = SPI3;
   hspi3.Init.Mode = SPI_MODE_MASTER;
   hspi3.Init.Direction = SPI_DIRECTION_2LINES;
@@ -49,12 +56,22 @@ void MX_SPI3_Init(void)
   {
     Error_Handler();
   }
+  /* USER CODE BEGIN SPI3_Init 2 */
+
+  /* USER CODE END SPI3_Init 2 */
 
 }
 /* SPI4 init function */
 void MX_SPI4_Init(void)
 {
 
+  /* USER CODE BEGIN SPI4_Init 0 */
+
+  /* USER CODE END SPI4_Init 0 */
+
+  /* USER CODE BEGIN SPI4_Init 1 */
+
+  /* USER CODE END SPI4_Init 1 */
   hspi4.Instance = SPI4;
   hspi4.Init.Mode = SPI_MODE_MASTER;
   hspi4.Init.Direction = SPI_DIRECTION_2LINES;
@@ -73,6 +90,9 @@ void MX_SPI4_Init(void)
   {
     Error_Handler();
   }
+  /* USER CODE BEGIN SPI4_Init 2 */
+
+  /* USER CODE END SPI4_Init 2 */
 
 }
 
@@ -93,7 +113,7 @@ void HAL_SPI_MspInit(SPI_HandleTypeDef* spiHandle)
     PB3     ------> SPI3_SCK
     PB5     ------> SPI3_MOSI
     */
-    GPIO_InitStruct.Pin = EID_CLK_Pin|EID_DIN_Pin;
+    GPIO_InitStruct.Pin = GPIO_PIN_3|EID_DIN_Pin;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
@@ -118,14 +138,7 @@ void HAL_SPI_MspInit(SPI_HandleTypeDef* spiHandle)
     PE13     ------> SPI4_MISO
     PE14     ------> SPI4_MOSI
     */
-    GPIO_InitStruct.Pin = GPIO_PIN_12|GPIO_PIN_14;
-    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-    GPIO_InitStruct.Pull = GPIO_PULLUP;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-    GPIO_InitStruct.Alternate = GPIO_AF5_SPI4;
-    HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
-
-    GPIO_InitStruct.Pin = GPIO_PIN_13;
+    GPIO_InitStruct.Pin = GPIO_PIN_12|GPIO_PIN_13|GPIO_PIN_14;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
@@ -153,7 +166,7 @@ void HAL_SPI_MspDeInit(SPI_HandleTypeDef* spiHandle)
     PB3     ------> SPI3_SCK
     PB5     ------> SPI3_MOSI
     */
-    HAL_GPIO_DeInit(GPIOB, EID_CLK_Pin|EID_DIN_Pin);
+    HAL_GPIO_DeInit(GPIOB, GPIO_PIN_3|EID_DIN_Pin);
 
   /* USER CODE BEGIN SPI3_MspDeInit 1 */
 

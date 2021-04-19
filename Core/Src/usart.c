@@ -31,6 +31,13 @@ UART_HandleTypeDef huart2;
 void MX_UART5_Init(void)
 {
 
+  /* USER CODE BEGIN UART5_Init 0 */
+
+  /* USER CODE END UART5_Init 0 */
+
+  /* USER CODE BEGIN UART5_Init 1 */
+
+  /* USER CODE END UART5_Init 1 */
   huart5.Instance = UART5;
   huart5.Init.BaudRate = 115200;
   huart5.Init.WordLength = UART_WORDLENGTH_8B;
@@ -45,6 +52,9 @@ void MX_UART5_Init(void)
   {
     Error_Handler();
   }
+  /* USER CODE BEGIN UART5_Init 2 */
+
+  /* USER CODE END UART5_Init 2 */
 
 }
 /* USART2 init function */
@@ -52,6 +62,13 @@ void MX_UART5_Init(void)
 void MX_USART2_UART_Init(void)
 {
 
+  /* USER CODE BEGIN USART2_Init 0 */
+
+  /* USER CODE END USART2_Init 0 */
+
+  /* USER CODE BEGIN USART2_Init 1 */
+
+  /* USER CODE END USART2_Init 1 */
   huart2.Instance = USART2;
   huart2.Init.BaudRate = 115200;
   huart2.Init.WordLength = UART_WORDLENGTH_8B;
@@ -66,6 +83,9 @@ void MX_USART2_UART_Init(void)
   {
     Error_Handler();
   }
+  /* USER CODE BEGIN USART2_Init 2 */
+
+  /* USER CODE END USART2_Init 2 */
 
 }
 
@@ -86,7 +106,7 @@ void HAL_UART_MspInit(UART_HandleTypeDef* uartHandle)
     PB8     ------> UART5_RX
     PB9     ------> UART5_TX
     */
-    GPIO_InitStruct.Pin = WIFI_RX_Pin|WIFI_TX_Pin;
+    GPIO_InitStruct.Pin = WiFi_RX_Pin|WiFi_TX_Pin;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
@@ -139,7 +159,7 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* uartHandle)
     PB8     ------> UART5_RX
     PB9     ------> UART5_TX
     */
-    HAL_GPIO_DeInit(GPIOB, WIFI_RX_Pin|WIFI_TX_Pin);
+    HAL_GPIO_DeInit(GPIOB, WiFi_RX_Pin|WiFi_TX_Pin);
 
   /* USER CODE BEGIN UART5_MspDeInit 1 */
 

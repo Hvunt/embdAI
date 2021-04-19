@@ -41,8 +41,6 @@
 /* Parameters set in STM32CubeMX LwIP Configuration GUI -*/
 /*----- WITH_RTOS enabled (Since FREERTOS is set) -----*/
 #define WITH_RTOS 1
-/*----- WITH_MBEDTLS enabled (Since MBEDTLS and FREERTOS are set) -----*/
-#define WITH_MBEDTLS 1
 /*----- CHECKSUM_BY_HARDWARE enabled -----*/
 #define CHECKSUM_BY_HARDWARE 1
 /*-----------------------------------------------------------------------------*/
@@ -51,28 +49,46 @@
 /* Parameters set in STM32CubeMX LwIP Configuration GUI -*/
 /*----- Value in opt.h for LWIP_DHCP: 0 -----*/
 #define LWIP_DHCP 1
-/*----- Value in opt.h for LWIP_DNS: 0 -----*/
-#define LWIP_DNS 1
+/*----- Default Value for LWIP_TCPIP_CORE_LOCKING: 0 ---*/
+#define LWIP_TCPIP_CORE_LOCKING 1
 /*----- Value in opt.h for MEM_ALIGNMENT: 1 -----*/
 #define MEM_ALIGNMENT 4
 /*----- Default Value for MEM_SIZE: 1600 ---*/
 #define MEM_SIZE 10240
+/*----- Default Value for MEMP_NUM_PBUF: 16 ---*/
+#define MEMP_NUM_PBUF 20
 /*----- Default Value for MEMP_NUM_TCP_SEG: 16 ---*/
-#define MEMP_NUM_TCP_SEG 30
+#define MEMP_NUM_TCP_SEG 80
+/*----- Value in opt.h for MEMP_NUM_SYS_TIMEOUT: (LWIP_TCP + IP_REASSEMBLY + LWIP_ARP + (2*LWIP_DHCP) + LWIP_AUTOIP + LWIP_IGMP + LWIP_DNS + (PPP_SUPPORT*6*MEMP_NUM_PPP_PCB) + (LWIP_IPV6 ? (1 + LWIP_IPV6_REASS + LWIP_IPV6_MLD) : 0)) -*/
+#define MEMP_NUM_SYS_TIMEOUT 5
+/*----- Default Value for PBUF_POOL_SIZE: 16 ---*/
+#define PBUF_POOL_SIZE 26
 /*----- Default Value for PBUF_POOL_BUFSIZE: 592 ---*/
 #define PBUF_POOL_BUFSIZE 2048
 /*----- Value in opt.h for LWIP_ETHERNET: LWIP_ARP || PPPOE_SUPPORT -*/
 #define LWIP_ETHERNET 1
 /*----- Value in opt.h for LWIP_DNS_SECURE: (LWIP_DNS_SECURE_RAND_XID | LWIP_DNS_SECURE_NO_MULTIPLE_OUTSTANDING | LWIP_DNS_SECURE_RAND_SRC_PORT) -*/
 #define LWIP_DNS_SECURE 7
+/*----- Default Value for TCP_WND: 5680 ---*/
+#define TCP_WND 1500
+/*----- Default Value for LWIP_TCP_SACK_OUT: 0 ---*/
+#define LWIP_TCP_SACK_OUT 1
+/*----- Default Value for TCP_MSS: 536 ---*/
+#define TCP_MSS 1420
+/*----- Default Value for TCP_SND_BUF: 2840 ---*/
+#define TCP_SND_BUF 2900
 /*----- Value in opt.h for TCP_SND_QUEUELEN: (4*TCP_SND_BUF + (TCP_MSS - 1))/TCP_MSS -----*/
 #define TCP_SND_QUEUELEN 9
-/*----- Value in opt.h for TCP_SNDLOWAT: LWIP_MIN(LWIP_MAX(((TCP_SND_BUF)/2), (2 * TCP_MSS) + 1), (TCP_SND_BUF) - 1) -*/
-#define TCP_SNDLOWAT 1071
 /*----- Value in opt.h for TCP_SNDQUEUELOWAT: LWIP_MAX(TCP_SND_QUEUELEN)/2, 5) -*/
 #define TCP_SNDQUEUELOWAT 5
-/*----- Value in opt.h for TCP_WND_UPDATE_THRESHOLD: LWIP_MIN(TCP_WND/4, TCP_MSS*4) -----*/
-#define TCP_WND_UPDATE_THRESHOLD 536
+/*----- Default Value for LWIP_TCP_TIMESTAMPS: 0 ---*/
+#define LWIP_TCP_TIMESTAMPS 1
+/*----- Default Value for TCP_WND_UPDATE_THRESHOLD: 375 ---*/
+#define TCP_WND_UPDATE_THRESHOLD 1460
+/*----- Default Value for LWIP_WND_SCALE: 0 ---*/
+#define LWIP_WND_SCALE 1
+/*----- Value in opt.h for TCP_RCV_SCALE: undefined if LWIP_WND_SCALE is defined -----*/
+#define TCP_RCV_SCALE 0
 /*----- Value in opt.h for LWIP_NETIF_LINK_CALLBACK: 0 -----*/
 #define LWIP_NETIF_LINK_CALLBACK 1
 /*----- Value in opt.h for TCPIP_THREAD_STACKSIZE: 0 -----*/
@@ -95,10 +111,10 @@
 #define DEFAULT_TCP_RECVMBOX_SIZE 10
 /*----- Value in opt.h for DEFAULT_ACCEPTMBOX_SIZE: 0 -----*/
 #define DEFAULT_ACCEPTMBOX_SIZE 6
+/*----- Default Value for LWIP_TCP_KEEPALIVE: 0 ---*/
+#define LWIP_TCP_KEEPALIVE 1
 /*----- Value in opt.h for RECV_BUFSIZE_DEFAULT: INT_MAX -----*/
 #define RECV_BUFSIZE_DEFAULT 2000000000
-/*----- Value in opt.h for LWIP_USE_EXTERNAL_MBEDTLS: 0 -----*/
-#define LWIP_USE_EXTERNAL_MBEDTLS 1
 /*----- Default Value for LWIP_SNTP: 0 ---*/
 #define LWIP_SNTP 1
 /*----- Value in opt.h for LWIP_STATS: 1 -----*/

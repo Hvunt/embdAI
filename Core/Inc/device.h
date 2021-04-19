@@ -22,6 +22,7 @@
 #define ACTION_UPDATE		('u')
 #define ACTION_GET			('g')
 #define ACTION_SET			('e')
+#define ACTION_ACK			('a')
 
 #define ACTION_DATA			(0xCA)
 #define ACTION_SETTINGS		(0x59)
