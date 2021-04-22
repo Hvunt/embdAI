@@ -73,7 +73,7 @@ typedef struct dataPacket {
 	uint32_t data_length;
 	uint8_t action;
 	uint8_t subaction;
-}dataPacket_t, *pdataPacket_t;
+} dataPacket_t, *pdataPacket_t;
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -81,7 +81,8 @@ typedef struct dataPacket {
 //#define SERVER_ADDRESS 			"194.67.110.109"
 //#define SERVER_ADDRESS_LOCAL 	"192.168.88.210"
 //#define SERVER_ADDRESS_VPN		"192.168.7.60"
-#define SERVER_ADDRESS_VPN		"192.168.7.1"
+#define SERVER_ADDRESS_VPN		"192.168.7.25"
+//#define SERVER_ADDRESS_VPN		"192.168.30.1"
 //#define SERVER_ADDRESS_VPN		"1.0.0.1"
 #define SERVER_PORT				2412
 //#define SERVER_ADDRESS_REMOTE	"194-67-110-109.cloudvps.regruhosting.ru"
@@ -140,99 +141,52 @@ volatile socketClient_t *client = NULL;
 /* USER CODE END Variables */
 /* Definitions for init */
 osThreadId_t initHandle;
-const osThreadAttr_t init_attributes = {
-  .name = "init",
-  .stack_size = 128 * 4,
-  .priority = (osPriority_t) osPriorityNormal,
-};
+const osThreadAttr_t init_attributes = { .name = "init", .stack_size = 128 * 4, .priority = (osPriority_t) osPriorityNormal, };
 /* Definitions for dataSend */
 osThreadId_t dataSendHandle;
-const osThreadAttr_t dataSend_attributes = {
-  .name = "dataSend",
-  .stack_size = 650 * 4,
-  .priority = (osPriority_t) osPriorityBelowNormal,
-};
+const osThreadAttr_t dataSend_attributes = { .name = "dataSend", .stack_size = 650 * 4, .priority = (osPriority_t) osPriorityBelowNormal, };
 /* Definitions for collectData */
 osThreadId_t collectDataHandle;
-const osThreadAttr_t collectData_attributes = {
-  .name = "collectData",
-  .stack_size = 128 * 4,
-  .priority = (osPriority_t) osPriorityBelowNormal,
-};
+const osThreadAttr_t collectData_attributes = { .name = "collectData", .stack_size = 128 * 4, .priority = (osPriority_t) osPriorityBelowNormal, };
 /* Definitions for logData */
 osThreadId_t logDataHandle;
-const osThreadAttr_t logData_attributes = {
-  .name = "logData",
-  .stack_size = 128 * 4,
-  .priority = (osPriority_t) osPriorityLow4,
-};
+const osThreadAttr_t logData_attributes = { .name = "logData", .stack_size = 128 * 4, .priority = (osPriority_t) osPriorityLow4, };
 /* Definitions for logStatus */
 osThreadId_t logStatusHandle;
-const osThreadAttr_t logStatus_attributes = {
-  .name = "logStatus",
-  .stack_size = 128 * 4,
-  .priority = (osPriority_t) osPriorityLow4,
-};
+const osThreadAttr_t logStatus_attributes = { .name = "logStatus", .stack_size = 128 * 4, .priority = (osPriority_t) osPriorityLow4, };
 /* Definitions for screenRefresh */
 osThreadId_t screenRefreshHandle;
-const osThreadAttr_t screenRefresh_attributes = {
-  .name = "screenRefresh",
-  .stack_size = 200 * 4,
-  .priority = (osPriority_t) osPriorityLow6,
-};
+const osThreadAttr_t screenRefresh_attributes = { .name = "screenRefresh", .stack_size = 200 * 4, .priority = (osPriority_t) osPriorityLow6, };
 /* Definitions for HATSCollect */
 osThreadId_t HATSCollectHandle;
-const osThreadAttr_t HATSCollect_attributes = {
-  .name = "HATSCollect",
-  .stack_size = 150 * 4,
-  .priority = (osPriority_t) osPriorityLow6,
-};
+const osThreadAttr_t HATSCollect_attributes = { .name = "HATSCollect", .stack_size = 150 * 4, .priority = (osPriority_t) osPriorityLow6, };
 /* Definitions for sensorsData */
 osMessageQueueId_t sensorsDataHandle;
-uint8_t sensorsDataBuffer[ 36000 * sizeof( uint8_t ) ];
+uint8_t sensorsDataBuffer[36000 * sizeof(uint8_t)];
 osStaticMessageQDef_t sensorsDataControlBlock;
-const osMessageQueueAttr_t sensorsData_attributes = {
-  .name = "sensorsData",
-  .cb_mem = &sensorsDataControlBlock,
-  .cb_size = sizeof(sensorsDataControlBlock),
-  .mq_mem = &sensorsDataBuffer,
-  .mq_size = sizeof(sensorsDataBuffer)
-};
+const osMessageQueueAttr_t sensorsData_attributes = { .name = "sensorsData", .cb_mem = &sensorsDataControlBlock, .cb_size =
+		sizeof(sensorsDataControlBlock), .mq_mem = &sensorsDataBuffer, .mq_size = sizeof(sensorsDataBuffer) };
 /* Definitions for dataBusyMutex */
 osMutexId_t dataBusyMutexHandle;
-const osMutexAttr_t dataBusyMutex_attributes = {
-  .name = "dataBusyMutex"
-};
+const osMutexAttr_t dataBusyMutex_attributes = { .name = "dataBusyMutex" };
 /* Definitions for screenBusyMutex */
 osMutexId_t screenBusyMutexHandle;
-const osMutexAttr_t screenBusyMutex_attributes = {
-  .name = "screenBusyMutex"
-};
+const osMutexAttr_t screenBusyMutex_attributes = { .name = "screenBusyMutex" };
 /* Definitions for sdBusyMutex */
 osMutexId_t sdBusyMutexHandle;
-const osMutexAttr_t sdBusyMutex_attributes = {
-  .name = "sdBusyMutex"
-};
+const osMutexAttr_t sdBusyMutex_attributes = { .name = "sdBusyMutex" };
 /* Definitions for HATSMutex */
 osMutexId_t HATSMutexHandle;
-const osMutexAttr_t HATSMutex_attributes = {
-  .name = "HATSMutex"
-};
+const osMutexAttr_t HATSMutex_attributes = { .name = "HATSMutex" };
 /* Definitions for socketMutex */
 osMutexId_t socketMutexHandle;
-const osMutexAttr_t socketMutex_attributes = {
-  .name = "socketMutex"
-};
+const osMutexAttr_t socketMutex_attributes = { .name = "socketMutex" };
 /* Definitions for DMA2BusySem */
 osSemaphoreId_t DMA2BusySemHandle;
-const osSemaphoreAttr_t DMA2BusySem_attributes = {
-  .name = "DMA2BusySem"
-};
+const osSemaphoreAttr_t DMA2BusySem_attributes = { .name = "DMA2BusySem" };
 /* Definitions for dataProcessingSem */
 osSemaphoreId_t dataProcessingSemHandle;
-const osSemaphoreAttr_t dataProcessingSem_attributes = {
-  .name = "dataProcessingSem"
-};
+const osSemaphoreAttr_t dataProcessingSem_attributes = { .name = "dataProcessingSem" };
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
@@ -298,89 +252,89 @@ void server_found_callback(const char *name, const ip_addr_t *ipaddr, void *arg)
 /* USER CODE END 1 */
 
 /**
-  * @brief  FreeRTOS initialization
-  * @param  None
-  * @retval None
-  */
+ * @brief  FreeRTOS initialization
+ * @param  None
+ * @retval None
+ */
 void MX_FREERTOS_Init(void) {
-  /* USER CODE BEGIN Init */
+	/* USER CODE BEGIN Init */
 	char deviceID[12] = { 0 };
 	getDeviceID(deviceID);
 	deviceSettingsInit(&device);
 	deviceSetID(&device, deviceID, sizeof(deviceID));
 
 	data_evnt_id = osEventFlagsNew(NULL);
-  /* USER CODE END Init */
-  /* Create the mutex(es) */
-  /* creation of dataBusyMutex */
-  dataBusyMutexHandle = osMutexNew(&dataBusyMutex_attributes);
+	/* USER CODE END Init */
+	/* Create the mutex(es) */
+	/* creation of dataBusyMutex */
+	dataBusyMutexHandle = osMutexNew(&dataBusyMutex_attributes);
 
-  /* creation of screenBusyMutex */
-  screenBusyMutexHandle = osMutexNew(&screenBusyMutex_attributes);
+	/* creation of screenBusyMutex */
+	screenBusyMutexHandle = osMutexNew(&screenBusyMutex_attributes);
 
-  /* creation of sdBusyMutex */
-  sdBusyMutexHandle = osMutexNew(&sdBusyMutex_attributes);
+	/* creation of sdBusyMutex */
+	sdBusyMutexHandle = osMutexNew(&sdBusyMutex_attributes);
 
-  /* creation of HATSMutex */
-  HATSMutexHandle = osMutexNew(&HATSMutex_attributes);
+	/* creation of HATSMutex */
+	HATSMutexHandle = osMutexNew(&HATSMutex_attributes);
 
-  /* creation of socketMutex */
-  socketMutexHandle = osMutexNew(&socketMutex_attributes);
+	/* creation of socketMutex */
+	socketMutexHandle = osMutexNew(&socketMutex_attributes);
 
-  /* USER CODE BEGIN RTOS_MUTEX */
-  /* USER CODE END RTOS_MUTEX */
+	/* USER CODE BEGIN RTOS_MUTEX */
+	/* USER CODE END RTOS_MUTEX */
 
-  /* Create the semaphores(s) */
-  /* creation of DMA2BusySem */
-  DMA2BusySemHandle = osSemaphoreNew(1, 1, &DMA2BusySem_attributes);
+	/* Create the semaphores(s) */
+	/* creation of DMA2BusySem */
+	DMA2BusySemHandle = osSemaphoreNew(1, 1, &DMA2BusySem_attributes);
 
-  /* creation of dataProcessingSem */
-  dataProcessingSemHandle = osSemaphoreNew(2, 2, &dataProcessingSem_attributes);
+	/* creation of dataProcessingSem */
+	dataProcessingSemHandle = osSemaphoreNew(2, 2, &dataProcessingSem_attributes);
 
-  /* USER CODE BEGIN RTOS_SEMAPHORES */
-  /* USER CODE END RTOS_SEMAPHORES */
+	/* USER CODE BEGIN RTOS_SEMAPHORES */
+	/* USER CODE END RTOS_SEMAPHORES */
 
-  /* USER CODE BEGIN RTOS_TIMERS */
+	/* USER CODE BEGIN RTOS_TIMERS */
 	/* start timers, add new ones, ... */
-  /* USER CODE END RTOS_TIMERS */
+	/* USER CODE END RTOS_TIMERS */
 
-  /* Create the queue(s) */
-  /* creation of sensorsData */
-  sensorsDataHandle = osMessageQueueNew (36000, sizeof(uint8_t), &sensorsData_attributes);
+	/* Create the queue(s) */
+	/* creation of sensorsData */
+	sensorsDataHandle = osMessageQueueNew(36000, sizeof(uint8_t), &sensorsData_attributes);
 
-  /* USER CODE BEGIN RTOS_QUEUES */
+	/* USER CODE BEGIN RTOS_QUEUES */
 	/* add queues, ... */
-  /* USER CODE END RTOS_QUEUES */
+	/* USER CODE END RTOS_QUEUES */
 
-  /* Create the thread(s) */
-  /* creation of init */
-  initHandle = osThreadNew(initTask, NULL, &init_attributes);
+	/* Create the thread(s) */
+	/* creation of init */
+	initHandle = osThreadNew(initTask, NULL, &init_attributes);
 
-  /* creation of dataSend */
-  dataSendHandle = osThreadNew(dataSendTask, NULL, &dataSend_attributes);
+	/* creation of dataSend */
+	dataSendHandle = osThreadNew(dataSendTask, NULL, &dataSend_attributes);
 
-  /* creation of collectData */
-  collectDataHandle = osThreadNew(collectDataTask, NULL, &collectData_attributes);
+	/* creation of collectData */
+	collectDataHandle = osThreadNew(collectDataTask, NULL, &collectData_attributes);
 
-  /* creation of logData */
-  logDataHandle = osThreadNew(logDataTask, NULL, &logData_attributes);
+	/* creation of logData */
+	logDataHandle = osThreadNew(logDataTask, NULL, &logData_attributes);
 
-  /* creation of logStatus */
-  logStatusHandle = osThreadNew(logStatusTask, NULL, &logStatus_attributes);
+	/* creation of logStatus */
+	logStatusHandle = osThreadNew(logStatusTask, NULL, &logStatus_attributes);
 
-  /* creation of screenRefresh */
-  screenRefreshHandle = osThreadNew(screenRefreshTask, NULL, &screenRefresh_attributes);
+	/* creation of screenRefresh */
+	screenRefreshHandle = osThreadNew(screenRefreshTask, NULL, &screenRefresh_attributes);
 
-  /* creation of HATSCollect */
-  HATSCollectHandle = osThreadNew(HATSCollectTask, NULL, &HATSCollect_attributes);
+	/* creation of HATSCollect */
+	HATSCollectHandle = osThreadNew(HATSCollectTask, NULL, &HATSCollect_attributes);
 
-  /* USER CODE BEGIN RTOS_THREADS */
+	/* USER CODE BEGIN RTOS_THREADS */
 
-  /* USER CODE END RTOS_THREADS */
+	/* USER CODE END RTOS_THREADS */
 
-  /* USER CODE BEGIN RTOS_EVENTS */
+	/* USER CODE BEGIN RTOS_EVENTS */
 	/* add events, ... */
-  /* USER CODE END RTOS_EVENTS */
+	/* USER CODE END RTOS_EVENTS */
 
 }
 
@@ -391,14 +345,13 @@ void MX_FREERTOS_Init(void) {
  * @retval None
  */
 /* USER CODE END Header_initTask */
-void initTask(void *argument)
-{
-  /* USER CODE BEGIN initTask */
+void initTask(void *argument) {
+	/* USER CODE BEGIN initTask */
 	osThreadExit();
 //	for (;;) {
 //		osDelay(1);
 //	}
-  /* USER CODE END initTask */
+	/* USER CODE END initTask */
 }
 
 /* USER CODE BEGIN Header_dataSendTask */
@@ -408,9 +361,8 @@ void initTask(void *argument)
  * @retval None
  */
 /* USER CODE END Header_dataSendTask */
-void dataSendTask(void *argument)
-{
-  /* USER CODE BEGIN dataSendTask */
+void dataSendTask(void *argument) {
+	/* USER CODE BEGIN dataSendTask */
 	MX_LWIP_Init();
 
 	while (gnetif.ip_addr.addr == 0) {
@@ -450,10 +402,14 @@ void dataSendTask(void *argument)
 							HAL_GPIO_WritePin(LD1_GPIO_Port,
 							LD1_Pin, GPIO_PIN_SET);
 							sending_errors++;
-							if (sending_errors > 10) {
-								close(client->soc);
-								connect_to_server((socketClient_t*) client);
-							}
+//							if (sending_errors > 10) {
+//								shutdown(client->soc, SHUT_RDWR);
+//								osDelay(500);
+//								close(client->soc);
+//								osDelay(500);
+//								client->soc = -1;
+//								connect_to_server((socketClient_t*) client);
+//							}
 						} else {
 							HAL_GPIO_WritePin(LD1_GPIO_Port,
 							LD1_Pin, GPIO_PIN_RESET);
@@ -475,7 +431,7 @@ void dataSendTask(void *argument)
 		}
 		//		uxHighWaterMark = uxTaskGetStackHighWaterMark( NULL );
 	}
-  /* USER CODE END dataSendTask */
+	/* USER CODE END dataSendTask */
 }
 
 /* USER CODE BEGIN Header_collectDataTask */
@@ -485,9 +441,8 @@ void dataSendTask(void *argument)
  * @retval None
  */
 /* USER CODE END Header_collectDataTask */
-void collectDataTask(void *argument)
-{
-  /* USER CODE BEGIN collectDataTask */
+void collectDataTask(void *argument) {
+	/* USER CODE BEGIN collectDataTask */
 	uint16_t temp = 0xFF;
 	for (;;) {
 
@@ -555,7 +510,7 @@ void collectDataTask(void *argument)
 				osDelay(1);
 		}
 	}
-  /* USER CODE END collectDataTask */
+	/* USER CODE END collectDataTask */
 }
 
 /* USER CODE BEGIN Header_logDataTask */
@@ -565,11 +520,10 @@ void collectDataTask(void *argument)
  * @retval None
  */
 /* USER CODE END Header_logDataTask */
-void logDataTask(void *argument)
-{
-  /* USER CODE BEGIN logDataTask */
+void logDataTask(void *argument) {
+	/* USER CODE BEGIN logDataTask */
 	osThreadExit();
-  /* USER CODE END logDataTask */
+	/* USER CODE END logDataTask */
 }
 
 /* USER CODE BEGIN Header_logStatusTask */
@@ -579,9 +533,8 @@ void logDataTask(void *argument)
  * @retval None
  */
 /* USER CODE END Header_logStatusTask */
-void logStatusTask(void *argument)
-{
-  /* USER CODE BEGIN logStatusTask */
+void logStatusTask(void *argument) {
+	/* USER CODE BEGIN logStatusTask */
 	osThreadExit();
 	//	char log_info[255];
 	//	FIL logFile;
@@ -616,7 +569,7 @@ void logStatusTask(void *argument)
 		//		}
 		osDelay(1000);
 	}
-  /* USER CODE END logStatusTask */
+	/* USER CODE END logStatusTask */
 }
 
 /* USER CODE BEGIN Header_screenRefreshTask */
@@ -626,9 +579,8 @@ void logStatusTask(void *argument)
  * @retval None
  */
 /* USER CODE END Header_screenRefreshTask */
-void screenRefreshTask(void *argument)
-{
-  /* USER CODE BEGIN screenRefreshTask */
+void screenRefreshTask(void *argument) {
+	/* USER CODE BEGIN screenRefreshTask */
 	uint8_t status = screen_init();
 
 	if (!status) {
@@ -673,7 +625,7 @@ void screenRefreshTask(void *argument)
 		}
 		osDelay(30000);
 	}
-  /* USER CODE END screenRefreshTask */
+	/* USER CODE END screenRefreshTask */
 }
 
 /* USER CODE BEGIN Header_HATSCollectTask */
@@ -683,9 +635,8 @@ void screenRefreshTask(void *argument)
  * @retval None
  */
 /* USER CODE END Header_HATSCollectTask */
-void HATSCollectTask(void *argument)
-{
-  /* USER CODE BEGIN HATSCollectTask */
+void HATSCollectTask(void *argument) {
+	/* USER CODE BEGIN HATSCollectTask */
 	/* Infinite loop */
 	Max31865_init(&max_1, &hspi4, SPI_TCS1_GPIO_Port, SPI_TCS1_Pin, 2, 50);
 	Max31865_init(&max_2, &hspi4, SPI_TCS2_GPIO_Port, SPI_TCS2_Pin, 2, 50);
@@ -704,7 +655,7 @@ void HATSCollectTask(void *argument)
 		}
 		osDelay(500);
 	}
-  /* USER CODE END HATSCollectTask */
+	/* USER CODE END HATSCollectTask */
 }
 
 /* Private application code --------------------------------------------------*/
@@ -734,6 +685,16 @@ void receiveDataTask(void *arg) {
 			case ACTION_STOP:
 				deviceState.action = ACTION_STOP;
 				device.device_status = DEVICE_STATUS_AWAITING;
+				shutdown(client->soc, SHUT_RDWR);
+				osDelay(1000);
+				close(client->soc);
+				osDelay(1000);
+				client->soc = 0xffffffff;
+				for (uint8_t i = 0; i < 18 /*9000 ms / 500 ms*/; i++) {
+					HAL_GPIO_TogglePin(LD1_GPIO_Port, LD1_Pin);
+					osDelay(500);
+				}
+				connect_to_server((socketClient_t*) client);
 				break;
 			case ACTION_UPDATE:
 				deviceState.action = ACTION_UPDATE;
@@ -763,37 +724,57 @@ void connect_to_server(socketClient_t *client) {
 	if (client->soc < 0) {
 		while (1) {
 			HAL_GPIO_TogglePin(LD1_GPIO_Port, LD1_Pin);
-			osDelay(500);
+			osDelay(250);
 		}
 	} else {
 		memset(&local_addr, 0, sizeof(struct sockaddr_in));
 		local_addr.sin_family = AF_INET;
 		local_addr.sin_port = htons(SERVER_PORT);
 		local_addr.sin_addr.s_addr = INADDR_ANY;
+		int8_t connection_status = -1;
+		while (connection_status < 0) {
+			if (bind(client->soc, (struct sockaddr *)&local_addr, sizeof(struct sockaddr_in)) == 0) {
+				memset(&dest_addr, 0, sizeof(struct sockaddr_in));
+				dest_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+				dest_addr.sin_family = AF_INET;
+				dest_addr.sin_port = htons(SERVER_PORT);
 
-		if (bind(client->soc, (struct sockaddr *)&local_addr, sizeof(struct sockaddr_in)) == 0) {
-			memset(&dest_addr, 0, sizeof(struct sockaddr_in));
-			dest_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-			dest_addr.sin_family = AF_INET;
-			dest_addr.sin_port = htons(SERVER_PORT);
+				ip4addr_aton(SERVER_ADDRESS_VPN, (ip4_addr_t*) &dest_addr.sin_addr);
 
-			ip4addr_aton(SERVER_ADDRESS_VPN, (ip4_addr_t*) &dest_addr.sin_addr);
+				connection_status = connect(client->soc, (struct sockaddr* )&dest_addr, sizeof(struct sockaddr_in));
 
-			while (connect(client->soc, (struct sockaddr* )&dest_addr, sizeof(struct sockaddr_in)) < 0) {
-				HAL_GPIO_TogglePin(LD1_GPIO_Port, LD1_Pin);
-				osDelay(10000);
+				if (connection_status < 0) {
+					HAL_GPIO_TogglePin(LD1_GPIO_Port, LD1_Pin);
+					shutdown(client->soc, SHUT_RDWR);
+					osDelay(500);
+					HAL_GPIO_TogglePin(LD1_GPIO_Port, LD1_Pin);
+					close(client->soc);
+					osDelay(500);
+					for (uint8_t i = 0; i < 18 /*9000 ms / 500 ms*/; i++) {
+						HAL_GPIO_TogglePin(LD1_GPIO_Port, LD1_Pin);
+						osDelay(500);
+					}
+					client->soc = socket(AF_INET, SOCK_STREAM, IPPROTO_IP);
+				} else {
+					uint32_t opt = 10;
+					int32_t ret = lwip_setsockopt(client->soc, SOL_SOCKET, SO_RCVTIMEO, &opt, sizeof(int));
+					if (!ret) {
+						HAL_GPIO_TogglePin(LD1_GPIO_Port, LD1_Pin);
+						osDelay(1000);
+					}
+					if (receiveDataHandle != NULL) {
+						return;
+					}
+					receiveDataHandle = osThreadNew(receiveDataTask, NULL, &receiveData_attributes);
+				}
+			} else {
+				while (1) {
+					HAL_GPIO_TogglePin(LD1_GPIO_Port, LD1_Pin);
+					osDelay(250);
+				}
 			}
-			uint32_t opt = 10;
-			int32_t ret = lwip_setsockopt(client->soc, SOL_SOCKET, SO_RCVTIMEO, &opt, sizeof(int));
-			if (!ret) {
-				HAL_GPIO_TogglePin(LD1_GPIO_Port, LD1_Pin);
-				osDelay(1000);
-			}
-			if (receiveDataHandle != NULL){
-				return;
-			}
-			receiveDataHandle = osThreadNew(receiveDataTask, NULL, &receiveData_attributes);
 		}
+
 	}
 }
 
