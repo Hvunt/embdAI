@@ -196,6 +196,7 @@ void drawMessageTask(void *message);
 
 //void server_found_callback(const char *name, struct ip_addr *ipaddr, void *arg);
 void connect_to_server(socketClient_t *client);
+void prepare_to_close_connection(void);
 //void receiveDataTask(void *arg);
 void decode_packet(char *in_data, uint32_t length);
 
@@ -397,7 +398,9 @@ void dataSendTask(void *argument) {
 						packet.subaction = 0;
 						packet.data_length = sizeof(sensorsDataBuffer);
 						sended = write(client->soc, &packet, sizeof(packet));
+						osEventFlagsWait(data_evnt_id, MSG_PACKET_HAS_BEEN_SENT, osFlagsWaitAny, osWaitForever);
 						sended = write(client->soc, sensorsDataBuffer, packet.data_length);
+						osEventFlagsWait(data_evnt_id, MSG_PACKET_HAS_BEEN_SENT, osFlagsWaitAny, osWaitForever);
 						if (sended <= 0) {
 							HAL_GPIO_WritePin(LD1_GPIO_Port,
 							LD1_Pin, GPIO_PIN_SET);
@@ -682,14 +685,14 @@ void receiveDataTask(void *arg) {
 				deviceState.action = ACTION_RUN;
 				device.device_status = DEVICE_STATUS_COLLECT_DATA;
 				break;
+//			case ACTION_GET:
+//				deviceState.action = ACTION_GET;
+//				device.device_status = DEVICE_STATUS_COLLECT_DATA;
+//				break;
 			case ACTION_STOP:
 				deviceState.action = ACTION_STOP;
 				device.device_status = DEVICE_STATUS_AWAITING;
-				shutdown(client->soc, SHUT_RDWR);
-				osDelay(1000);
-				close(client->soc);
-				osDelay(1000);
-				client->soc = 0xffffffff;
+				prepare_to_close_connection();
 				for (uint8_t i = 0; i < 18 /*9000 ms / 500 ms*/; i++) {
 					HAL_GPIO_TogglePin(LD1_GPIO_Port, LD1_Pin);
 					osDelay(500);
@@ -698,6 +701,7 @@ void receiveDataTask(void *arg) {
 				break;
 			case ACTION_UPDATE:
 				deviceState.action = ACTION_UPDATE;
+				prepare_to_close_connection();
 				break;
 			case ACTION_ACK:
 				HAL_GPIO_TogglePin(LD3_GPIO_Port, LD3_Pin);
@@ -776,6 +780,14 @@ void connect_to_server(socketClient_t *client) {
 		}
 
 	}
+}
+
+void prepare_to_close_connection(void) {
+	shutdown(client->soc, SHUT_RDWR);
+	osDelay(1000);
+	close(client->soc);
+	osDelay(1000);
+	client->soc = 0xffffffff;
 }
 
 void decode_packet(char *in_data, uint32_t length) {
