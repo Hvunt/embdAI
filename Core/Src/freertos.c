@@ -196,7 +196,7 @@ void drawMessageTask(void *message);
 
 //void server_found_callback(const char *name, struct ip_addr *ipaddr, void *arg);
 void connect_to_server(socketClient_t *client);
-void prepare_to_close_connection(void);
+static void prepare_to_close_connection(void);
 //void receiveDataTask(void *arg);
 void decode_packet(char *in_data, uint32_t length);
 
@@ -389,22 +389,19 @@ void dataSendTask(void *argument) {
 				uint32_t event_flag = osEventFlagsWait(data_evnt_id,
 				MSG_DATA_READY, osFlagsWaitAny, osWaitForever);
 				if (event_flag == MSG_DATA_READY) {
-					osStatus_t result = osMutexAcquire(dataBusyMutexHandle,
-					osWaitForever);
-					if (result == osOK) {
-						dataPacket_t packet;
+					dataPacket_t packet;
 //						packet.data = NULL;
-						packet.action = 'r';
-						packet.subaction = 0;
-						packet.data_length = sizeof(sensorsDataBuffer);
-						sended = write(client->soc, &packet, sizeof(packet));
-						osEventFlagsWait(data_evnt_id, MSG_PACKET_HAS_BEEN_SENT, osFlagsWaitAny, osWaitForever);
-						sended = write(client->soc, sensorsDataBuffer, packet.data_length);
-						osEventFlagsWait(data_evnt_id, MSG_PACKET_HAS_BEEN_SENT, osFlagsWaitAny, osWaitForever);
-						if (sended <= 0) {
-							HAL_GPIO_WritePin(LD1_GPIO_Port,
-							LD1_Pin, GPIO_PIN_SET);
-							sending_errors++;
+					packet.action = 'r';
+					packet.subaction = 0;
+					packet.data_length = sizeof(sensorsDataBuffer);
+					sended = write(client->soc, &packet, sizeof(packet));
+					osEventFlagsWait(data_evnt_id, MSG_PACKET_HAS_BEEN_SENT, osFlagsWaitAny, 1000);
+					sended = write(client->soc, sensorsDataBuffer, packet.data_length);
+					osEventFlagsWait(data_evnt_id, MSG_PACKET_HAS_BEEN_SENT, osFlagsWaitAny, 1000);
+					if (sended <= 0) {
+						HAL_GPIO_WritePin(LD1_GPIO_Port,
+						LD1_Pin, GPIO_PIN_SET);
+						sending_errors++;
 //							if (sending_errors > 10) {
 //								shutdown(client->soc, SHUT_RDWR);
 //								osDelay(500);
@@ -413,13 +410,11 @@ void dataSendTask(void *argument) {
 //								client->soc = -1;
 //								connect_to_server((socketClient_t*) client);
 //							}
-						} else {
-							HAL_GPIO_WritePin(LD1_GPIO_Port,
-							LD1_Pin, GPIO_PIN_RESET);
-						}
-						osMutexRelease(dataBusyMutexHandle);
-						device.measurements_counter++;
+					} else {
+						HAL_GPIO_WritePin(LD1_GPIO_Port,
+						LD1_Pin, GPIO_PIN_RESET);
 					}
+					device.measurements_counter++;
 				}
 			} else {
 				HAL_GPIO_WritePin(LD1_GPIO_Port, LD1_Pin, GPIO_PIN_SET);
@@ -454,60 +449,54 @@ void collectDataTask(void *argument) {
 				uint32_t event_flag = osEventFlagsWait(data_evnt_id,
 				MSG_COLLECT, osFlagsWaitAny, osWaitForever);
 				if (event_flag == MSG_COLLECT) {
-					osStatus_t res = osMutexAcquire(dataBusyMutexHandle,
-					osWaitForever);
-					if (res == osOK) {
-						clean_buff(sensorsDataBuffer, sensorsData_attributes.mq_size);
-						//						for (uint32_t i = 0; i < sensorsData_attributes.mq_size; i++)
-						//							sensorsDataBuffer[i] = 0;
+					clean_buff(sensorsDataBuffer, sensorsData_attributes.mq_size);
+					//						for (uint32_t i = 0; i < sensorsData_attributes.mq_size; i++)
+					//							sensorsDataBuffer[i] = 0;
 
-						//						uint32_t start_ticks = osKernelGetTickCount();
-						//						uint32_t now_ticks = start_ticks;
+					//						uint32_t start_ticks = osKernelGetTickCount();
+					//						uint32_t now_ticks = start_ticks;
 
-						for (uint16_t i = 0; (i < sensorsData_attributes.mq_size);) {
-							// ///collect data from ADC/// //
-							uint16_t data[7] = { 0 };
-							osSemaphoreAcquire(DMA2BusySemHandle,
-							osWaitForever);
-							HAL_ADC_Start_DMA(&hadc3, (uint32_t*) data, 7);
-							osSemaphoreAcquire(DMA2BusySemHandle,
-							osWaitForever);
-							osSemaphoreRelease(DMA2BusySemHandle);
-							for (uint8_t j = 0; j < 7; j++, i += 2) {
-								sensorsDataBuffer[i] = data[j] >> 8;
-								sensorsDataBuffer[i + 1] = data[j];
-							}
-
-							// ///collect data from MAX31865/// //
-							osMutexAcquire(HATSMutexHandle, osWaitForever);
-							if (HATS_temp_1 < 1000) {
-								temp = HATS_temp_1;
-								sensorsDataBuffer[i] = temp >> 8;
-								sensorsDataBuffer[i + 1] = temp;
-							} else {
-								sensorsDataBuffer[i] = 0xFF;
-								sensorsDataBuffer[i + 1] = 0xFF;
-							}
-
-							i += 2;
-							if (HATS_temp_2 < 1000) {
-								temp = HATS_temp_2;
-								sensorsDataBuffer[i] = temp >> 8;
-								sensorsDataBuffer[i + 1] = temp;
-							} else {
-								sensorsDataBuffer[i] = 0xFF;
-								sensorsDataBuffer[i + 1] = 0xFF;
-							}
-							osMutexRelease(HATSMutexHandle);
-							i += 2;
+					for (uint16_t i = 0; (i < sensorsData_attributes.mq_size);) {
+						// ///collect data from ADC/// //
+						uint16_t data[7] = { 0 };
+						osSemaphoreAcquire(DMA2BusySemHandle,
+						osWaitForever);
+						HAL_ADC_Start_DMA(&hadc3, (uint32_t*) data, 7);
+						osSemaphoreAcquire(DMA2BusySemHandle,
+						osWaitForever);
+						osSemaphoreRelease(DMA2BusySemHandle);
+						for (uint8_t j = 0; j < 7; j++, i += 2) {
+							sensorsDataBuffer[i] = data[j] >> 8;
+							sensorsDataBuffer[i + 1] = data[j];
 						}
 
-						//					now_ticks = osKernelGetTickCount();
-						//					now_ticks -= start_ticks;
+						// ///collect data from MAX31865/// //
+						osMutexAcquire(HATSMutexHandle, osWaitForever);
+						if (HATS_temp_1 < 1000) {
+							temp = HATS_temp_1;
+							sensorsDataBuffer[i] = temp >> 8;
+							sensorsDataBuffer[i + 1] = temp;
+						} else {
+							sensorsDataBuffer[i] = 0xFF;
+							sensorsDataBuffer[i + 1] = 0xFF;
+						}
 
-						osMutexRelease(dataBusyMutexHandle);
-						osEventFlagsSet(data_evnt_id, MSG_DATA_READY);
+						i += 2;
+						if (HATS_temp_2 < 1000) {
+							temp = HATS_temp_2;
+							sensorsDataBuffer[i] = temp >> 8;
+							sensorsDataBuffer[i + 1] = temp;
+						} else {
+							sensorsDataBuffer[i] = 0xFF;
+							sensorsDataBuffer[i + 1] = 0xFF;
+						}
+						osMutexRelease(HATSMutexHandle);
+						i += 2;
 					}
+
+					//					now_ticks = osKernelGetTickCount();
+					//					now_ticks -= start_ticks;
+					osEventFlagsSet(data_evnt_id, MSG_DATA_READY);
 				}
 			} else
 				osDelay(1);
@@ -782,7 +771,7 @@ void connect_to_server(socketClient_t *client) {
 	}
 }
 
-void prepare_to_close_connection(void) {
+static void prepare_to_close_connection(void) {
 	shutdown(client->soc, SHUT_RDWR);
 	osDelay(1000);
 	close(client->soc);
