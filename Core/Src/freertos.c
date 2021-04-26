@@ -381,8 +381,6 @@ void dataSendTask(void *argument) {
 	device.device_status = DEVICE_STATUS_AWAITING;
 	ssize_t sended;
 	for (;;) {
-		HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
-
 		if (deviceState.action == ACTION_RUN) {
 			if (dataBusyMutexHandle != NULL) {
 				osEventFlagsSet(data_evnt_id, MSG_COLLECT);
@@ -395,9 +393,9 @@ void dataSendTask(void *argument) {
 					packet.subaction = 0;
 					packet.data_length = sizeof(sensorsDataBuffer);
 					sended = write(client->soc, &packet, sizeof(packet));
-					osEventFlagsWait(data_evnt_id, MSG_PACKET_HAS_BEEN_SENT, osFlagsWaitAny, 1000);
+					osEventFlagsWait(data_evnt_id, MSG_PACKET_HAS_BEEN_SENT, osFlagsWaitAny, 5000);
 					sended = write(client->soc, sensorsDataBuffer, packet.data_length);
-					osEventFlagsWait(data_evnt_id, MSG_PACKET_HAS_BEEN_SENT, osFlagsWaitAny, 1000);
+					osEventFlagsWait(data_evnt_id, MSG_PACKET_HAS_BEEN_SENT, osFlagsWaitAny, 5000);
 					if (sended <= 0) {
 						HAL_GPIO_WritePin(LD1_GPIO_Port,
 						LD1_Pin, GPIO_PIN_SET);
@@ -461,14 +459,22 @@ void collectDataTask(void *argument) {
 						uint16_t data[7] = { 0 };
 						osSemaphoreAcquire(DMA2BusySemHandle,
 						osWaitForever);
-						HAL_ADC_Start_DMA(&hadc3, (uint32_t*) data, 7);
-						osSemaphoreAcquire(DMA2BusySemHandle,
-						osWaitForever);
-						osSemaphoreRelease(DMA2BusySemHandle);
-						for (uint8_t j = 0; j < 7; j++, i += 2) {
-							sensorsDataBuffer[i] = data[j] >> 8;
-							sensorsDataBuffer[i + 1] = data[j];
+						HAL_ADC_Start_DMA(&hadc3, (uint32_t*) data, 4);
+						if (osSemaphoreAcquire(DMA2BusySemHandle, 1000) < 0) {
+							osSemaphoreRelease(DMA2BusySemHandle);
+							for (uint8_t j = 0; j < 4; j++, i += 2) {
+								sensorsDataBuffer[i] = 0xFF;
+								sensorsDataBuffer[i + 1] = 0xFF;
+							}
+						} else {
+							osSemaphoreRelease(DMA2BusySemHandle);
+							for (uint8_t j = 0; j < 4; j++, i += 2) {
+								sensorsDataBuffer[i] = data[j] >> 8;
+								sensorsDataBuffer[i + 1] = data[j];
+							}
 						}
+						// ///PLACEHOLDER FOR ACCELEROMETERS/// //
+						i+=6;
 
 						// ///collect data from MAX31865/// //
 						osMutexAcquire(HATSMutexHandle, osWaitForever);
@@ -681,8 +687,14 @@ void receiveDataTask(void *arg) {
 			case ACTION_STOP:
 				deviceState.action = ACTION_STOP;
 				device.device_status = DEVICE_STATUS_AWAITING;
-				prepare_to_close_connection();
-				for (uint8_t i = 0; i < 18 /*9000 ms / 500 ms*/; i++) {
+				shutdown(client->soc, SHUT_RDWR);
+				osDelay(1000);
+				close(client->soc);
+				osDelay(1000);
+				client->soc = 0xffffffff;
+//				prepare_to_close_connection();
+
+				for (uint8_t i = 0; i < 120 /*9000 ms / 500 ms*/; i++) {
 					HAL_GPIO_TogglePin(LD1_GPIO_Port, LD1_Pin);
 					osDelay(500);
 				}
@@ -709,7 +721,7 @@ void connect_to_server(socketClient_t *client) {
 
 	char deviceID[13];
 	deviceGetID(&device, deviceID, 13);
-	memset(client, 0, sizeof(socketClient_t));
+//	memset(client, 0, sizeof(socketClient_t));
 
 	client->soc = socket(AF_INET, SOCK_STREAM, IPPROTO_IP);
 //	client->soc = socket(AF_INET, SOCK_DGRAM, IPPROTO_IP);
@@ -761,10 +773,12 @@ void connect_to_server(socketClient_t *client) {
 					receiveDataHandle = osThreadNew(receiveDataTask, NULL, &receiveData_attributes);
 				}
 			} else {
-				while (1) {
+				for (uint8_t i = 0; i < 100; i++) {
 					HAL_GPIO_TogglePin(LD1_GPIO_Port, LD1_Pin);
 					osDelay(250);
 				}
+				prepare_to_close_connection();
+				client->soc = socket(AF_INET, SOCK_STREAM, IPPROTO_IP);
 			}
 		}
 
