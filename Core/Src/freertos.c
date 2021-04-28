@@ -126,7 +126,7 @@ DeviceSettings_t device;
 DeviceAction_t deviceState;
 
 Max31865_t max_1, max_2;
-volatile uint16_t HATS_temp_1 = 0, HATS_temp_2 = 0;
+volatile uint16_t HATS_temp_1 = 0xFFFF, HATS_temp_2 = 0xFFFF;
 volatile uint8_t HATS_new_data = 0;
 
 volatile uint32_t measurements_counter = 0;
@@ -533,7 +533,7 @@ void collectDataTask(void *argument)
 
 						// ///collect data from MAX31865/// //
 						osMutexAcquire(HATSMutexHandle, osWaitForever);
-						if (HATS_temp_1 < 1000) {
+						if (HATS_temp_1 < 2000) {
 							temp = HATS_temp_1;
 							sensorsDataBuffer[i] = temp >> 8;
 							sensorsDataBuffer[i + 1] = temp;
@@ -543,7 +543,7 @@ void collectDataTask(void *argument)
 						}
 
 						i += 2;
-						if (HATS_temp_2 < 1000) {
+						if (HATS_temp_2 < 2000) {
 							temp = HATS_temp_2;
 							sensorsDataBuffer[i] = temp >> 8;
 							sensorsDataBuffer[i + 1] = temp;
