@@ -629,7 +629,6 @@ void watchdogTask(void *args) {
 
 void get_adc(uint16_t *out_buffer, uint32_t length) {
 	uint16_t data[length];
-	uint16_t test_data[length*10];
 	uint16_t temp_data[length];
 	clean_buff(temp_data, length);
 	HAL_ADC_Start_DMA(&hadc3, (uint32_t*) data, length);
@@ -639,12 +638,9 @@ void get_adc(uint16_t *out_buffer, uint32_t length) {
 		if (osSemaphoreAcquire(DMA2BusySemHandle, 1000) < 0) {
 			for (uint8_t j = 0; j < length; j++)
 				temp_data[j] +=0;
-//				out_buffer[j] += 0;
 		} else {
-			for (uint8_t j = 0; j < length; j++){
+			for (uint8_t j = 0; j < length; j++)
 				temp_data[j] += data[j];
-				test_data[i*length+j] = data[j];
-			}
 		}
 		osSemaphoreRelease(DMA2BusySemHandle);
 	}
