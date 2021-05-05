@@ -78,9 +78,9 @@ typedef struct dataPacket {
 #define FILESERVER_ADDRESS		"192.168.7.25"
 #define SERVER_PORT				2412
 
-enum {
-	MSG_DATA_READY = 1, MSG_COLLECT, MSG_PACKET_HAS_BEEN_SENT
-};
+#define MSG_DATA_READY 				(1<<0)
+#define MSG_COLLECT					(1<<1)
+#define MSG_PACKET_HAS_BEEN_SENT	(1<<2)
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
