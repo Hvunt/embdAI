@@ -11,22 +11,35 @@
 #ifndef INC_DEVICE_H_
 #define INC_DEVICE_H_
 
-#define LA_T_SENS_COUNT_REG	(0x03)
-#define HA_T_SENS_COUNT_REG	(0x04)
-#define DIS_SENS_COUNT_REG 	(0x09)
-#define TIME_INTERVAL_REG 	(0x0C)
-#define SD_CARD_RECORD_REG 	(0x10)
+#define HA_T_SENS_COUNT_REG		(0x04)
+#define VLTG_SENS_COUNT_REG 	(0x09)
+#define TIME_INTERVAL_REG 		(0x0C)
+#define SD_CARD_RECORD_REG 		(0x10)
+#define MIC_REG					(0x11)
 
-#define ACTION_RUN			('r')
-#define ACTION_STOP			('s')
-#define ACTION_UPDATE		('u')
-#define ACTION_GET_D		('p')
-#define ACTION_GET_S		('g')
-#define ACTION_SET			('e')
-#define ACTION_ACK			('a')
+enum {
+	ACTION_RUN = 0x01,
+	ACTION_STOP,
+	ACTION_UPDATE,
+	ACTION_GET_D,
+	ACTION_GET_S,
+	ACTION_SET_S,
+	ACTION_ACK,
 
-#define ACTION_DATA			(0xCA)
-#define ACTION_SETTINGS		(0x59)
+
+	ACTION_ERR = 0xFF
+};
+
+//#define ACTION_RUN				('r')
+//#define ACTION_STOP				('s')
+//#define ACTION_UPDATE			('u')
+//#define ACTION_GET_D			('p')
+//#define ACTION_GET_S			('g')
+//#define ACTION_SET				('e')
+//#define ACTION_ACK				('a')
+
+#define ACTION_DATA				(0xCA)
+#define ACTION_SETTINGS			(0x59)
 
 enum {
 	SD_CARD_RECORD_STOP = 0x00,
@@ -47,10 +60,9 @@ enum {
 
 typedef struct DeviceSettings{
 	//count of used sensors
-	uint8_t la_t_sens_count;		//0..2 -- Low Accuracy temperature sensors
 	uint8_t ha_t_sens_count;		//0..2 -- High Accuracy temperature sensors
-	uint8_t dis_sens_count;			//0..4 -- Displacement sensors
-	uint8_t use_mic;				//using microphone
+	uint8_t voltage_sens_count;		//0..4 -- Standard analog voltage input
+	uint8_t use_mic;				//use a microphone port
 
 	//time interval between each measured data packets
 	uint16_t time_interval;			//100..10000 ms

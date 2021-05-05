@@ -341,14 +341,14 @@ void dataSendTask(void *argument) {
 	device.device_status = DEVICE_STATUS_AWAITING;
 	ssize_t sended;
 	for (;;) {
-		if (deviceState.action == ACTION_RUN) {
+		if (deviceState.action == ACTION_GET_D) {
 			if (dataBusyMutexHandle != NULL) {
 				osEventFlagsSet(data_evnt_id, MSG_COLLECT);
 				uint32_t event_flag = osEventFlagsWait(data_evnt_id, MSG_DATA_READY, osFlagsWaitAny, osWaitForever);
 				if (event_flag == MSG_DATA_READY) {
 					dataPacket_t packet;
 //						packet.data = NULL;
-					packet.action = 'r';
+					packet.action = ACTION_GET_D; // requsted action from server
 					packet.subaction = 0;
 					packet.data_length = sizeof(sensorsDataBuffer);
 					sended = write(client->soc, &packet, sizeof(packet));
@@ -404,7 +404,7 @@ void collectDataTask(void *argument) {
 	for (;;) {
 
 		if (dataBusyMutexHandle != NULL) {
-			if (deviceState.action == ACTION_RUN) {
+			if (deviceState.action == ACTION_GET_D) {
 				uint32_t event_flag = osEventFlagsWait(data_evnt_id, MSG_COLLECT, osFlagsWaitAny, osWaitForever);
 				if (event_flag == MSG_COLLECT) {
 					clean_buff(sensorsDataBuffer, sensorsData_attributes.mq_size);
@@ -659,14 +659,14 @@ void receiveDataTask(void *arg) {
 		if (recv_length > 0 && recv_length < 0xffffffff) {
 			pdataPacket_t packet = (pdataPacket_t) recv_buffer;
 			switch (packet->action) {
-			case ACTION_RUN:
-				deviceState.action = ACTION_RUN;
+			case ACTION_GET_D:
+				deviceState.action = ACTION_GET_D;
 				device.device_status = DEVICE_STATUS_COLLECT_DATA;
 				break;
-//			case ACTION_GET:
-//				deviceState.action = ACTION_GET;
+			case ACTION_GET_S:
+				deviceState.action = ACTION_GET_S;
 //				device.device_status = DEVICE_STATUS_COLLECT_DATA;
-//				break;
+				break;
 			case ACTION_STOP:
 				deviceState.action = ACTION_STOP;
 				device.device_status = DEVICE_STATUS_AWAITING;
