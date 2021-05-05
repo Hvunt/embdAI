@@ -33,8 +33,6 @@
 #include "lwip/dns.h"
 #include "lwip/netif.h"
 //#include "lwip/apps/sntp.h"
-//#include "lwip/apps/mqtt.h"
-//#include "lwip/apps/mqtt_priv.h"
 #include "lwip/sockets.h"
 #include "lwip/tcpbase.h"
 
@@ -45,7 +43,6 @@
 
 #include "device.h"
 //#include "iwdg.h"
-//#include "rng.h"
 #include "tim.h"
 //#include "pepega.h"
 //#include "fatfs.h"
@@ -78,26 +75,8 @@ typedef struct dataPacket {
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-//#define SERVER_ADDRESS 			"194.67.110.109"
-//#define SERVER_ADDRESS_LOCAL 	"192.168.88.210"
-//#define SERVER_ADDRESS_VPN		"192.168.7.60"
-#define SERVER_ADDRESS_VPN		"192.168.7.25"
-//#define SERVER_ADDRESS_VPN		"192.168.30.1"
-//#define SERVER_ADDRESS_VPN		"1.0.0.1"
+#define FILESERVER_ADDRESS		"192.168.7.25"
 #define SERVER_PORT				2412
-//#define SERVER_ADDRESS_REMOTE	"194-67-110-109.cloudvps.regruhosting.ru"
-
-#define SUB_TOPIC_NAME 	"devices/settings"
-
-//static const char PUB_TOPIC_NAME_POST_DATA[] = "/sensors";
-//static const char PUB_TOPIC_NAME_POST_SETTINGS[] = "/settings";
-//static const char PUB_TOPIC_NAME_PRED[] = "devices/";
-
-//#define DEVICE_LOGIN	"test_device"
-//#define DEVICE_PASSWORD "4556"
-
-#define FRAME_SIZE 				500
-#define FRAME_HEAD_LENGTH 		6
 
 #define MSG_DATA_READY 				0x01
 #define MSG_COLLECT 				0x02
@@ -114,7 +93,6 @@ typedef struct dataPacket {
 //pool of memory for the eink display
 UBYTE *BlackImage, *YellowImage;
 
-//extern RNG_HandleTypeDef hrng;
 //extern IWDG_HandleTypeDef hiwdg;
 extern ADC_HandleTypeDef hadc3;
 extern TIM_HandleTypeDef htim2;
@@ -242,20 +220,10 @@ void screenInitTask(void *args);
 void watchdogTask(void *args);
 void drawMessageTask(void *message);
 
-//void server_found_callback(const char *name, struct ip_addr *ipaddr, void *arg);
 void connect_to_server(socketClient_t *client);
 static void prepare_to_close_connection(void);
 //void receiveDataTask(void *arg);
 void decode_packet(char *in_data, uint32_t length);
-
-//MQTT connection
-//void connect_to_server(mqtt_client_t *client);
-//void serverFound(const char *name, const ip_addr_t *ip_addr, void *arg);
-//static void mqtt_connection_cb(mqtt_client_t *client, void *arg, mqtt_connection_status_t status);
-//static void mqtt_incoming_data_cb(void *arg, const uint8_t *data, uint16_t len, uint8_t flags);
-//static void mqtt_incoming_publish_cb(void *arg, const char *topic, u32_t tot_len);
-//static void mqtt_pub_request_cb(void *arg, err_t result);
-//static void mqtt_sub_request_cb(void *arg, err_t result);
 
 //utility
 static void getDeviceID(char *name);
@@ -291,13 +259,6 @@ __weak unsigned long getRunTimeCounterValue(void) {
 	return 0;
 }
 
-void server_found_callback(const char *name, const ip_addr_t *ipaddr, void *arg) {
-	ip_addr_t *addr = (ip_addr_t*) arg;
-	if (ipaddr) {
-		addr->addr = ipaddr->addr;
-		HAL_GPIO_TogglePin(LD1_GPIO_Port, LD1_Pin);
-	}
-}
 /* USER CODE END 1 */
 
 /**
@@ -425,8 +386,6 @@ void dataSendTask(void *argument)
 	client = (socketClient_t*) mem_calloc(1, sizeof(socketClient_t));
 	connect_to_server((socketClient_t*) client);
 	uint16_t sending_errors = 0;
-	//	uint8_t tx_buffer[FRAME_SIZE + FRAME_HEAD_LENGTH] = { 0 };
-	//	uint8_t packets_count = sensorsData_attributes.mq_size / FRAME_SIZE;
 
 	device.device_status = DEVICE_STATUS_AWAITING;
 	ssize_t sended;
@@ -467,8 +426,6 @@ void dataSendTask(void *argument)
 			} else {
 				HAL_GPIO_WritePin(LD1_GPIO_Port, LD1_Pin, GPIO_PIN_SET);
 			}
-			//			osDelay(1);
-			//			osDelay(device.time_interval);
 		} else
 			osDelay(10);
 
@@ -503,18 +460,14 @@ void collectDataTask(void *argument)
 				MSG_COLLECT, osFlagsWaitAny, osWaitForever);
 				if (event_flag == MSG_COLLECT) {
 					clean_buff(sensorsDataBuffer, sensorsData_attributes.mq_size);
-//						for (uint32_t i = 0; i < sensorsData_attributes.mq_size; i++)
-//							sensorsDataBuffer[i] = 0;
-
 //						uint32_t start_ticks = osKernelGetTickCount();
 //						uint32_t now_ticks = start_ticks;
 
 					for (uint16_t i = 0; (i < sensorsData_attributes.mq_size);) {
+
 						// ///collect data from ADC/// //
 						osSemaphoreAcquire(DMA2BusySemHandle,
 						osWaitForever);
-//						HAL_TIM_Base_Start(&htim2);
-//						HAL_ADC_Start_DMA(&hadc3, (uint32_t*) data, 4);
 						if (osSemaphoreAcquire(DMA2BusySemHandle, 1000) < 0) {
 							osSemaphoreRelease(DMA2BusySemHandle);
 							for (uint8_t j = 0; j < 4; j++, i += 2) {
@@ -528,7 +481,7 @@ void collectDataTask(void *argument)
 								sensorsDataBuffer[i + 1] = data[j];
 							}
 						}
-						// ///PLACEHOLDER FOR ACCELEROMETERS/// //
+						// ///PLACEHOLDER FOR ACCELEROMETERS AND MICROPHONE/// //
 						i += 6;
 
 						// ///collect data from MAX31865/// //
@@ -780,10 +733,9 @@ void connect_to_server(socketClient_t *client) {
 
 	char deviceID[13];
 	deviceGetID(&device, deviceID, 13);
-//	memset(client, 0, sizeof(socketClient_t));
+	memset(client, 0, sizeof(socketClient_t));
 
 	client->soc = socket(AF_INET, SOCK_STREAM, IPPROTO_IP);
-//	client->soc = socket(AF_INET, SOCK_DGRAM, IPPROTO_IP);
 
 	if (client->soc < 0) {
 		while (1) {
@@ -803,7 +755,7 @@ void connect_to_server(socketClient_t *client) {
 				dest_addr.sin_family = AF_INET;
 				dest_addr.sin_port = htons(SERVER_PORT);
 
-				ip4addr_aton(SERVER_ADDRESS_VPN, (ip4_addr_t*) &dest_addr.sin_addr);
+				ip4addr_aton(FILESERVER_ADDRESS, (ip4_addr_t*) &dest_addr.sin_addr);
 
 				connection_status = connect(client->soc, (struct sockaddr* )&dest_addr, sizeof(struct sockaddr_in));
 
