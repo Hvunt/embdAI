@@ -78,9 +78,11 @@ typedef struct dataPacket {
 #define FILESERVER_ADDRESS		"192.168.7.25"
 #define SERVER_PORT				2412
 
-#define MSG_DATA_READY 				0x01
-#define MSG_COLLECT 				0x02
-#define MSG_PACKET_HAS_BEEN_SENT 	0x03
+enum {
+	MSG_DATA_READY = 1,
+	MSG_COLLECT,
+	MSG_PACKET_HAS_BEEN_SENT
+};
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -227,7 +229,6 @@ void decode_packet(char *in_data, uint32_t length);
 
 //utility
 static void getDeviceID(char *name);
-//static void makePubTopicName(char *out, size_t out_len);
 void load_bootloader();
 
 //eink-display functions prototype
@@ -469,18 +470,19 @@ void collectDataTask(void *argument)
 						osSemaphoreAcquire(DMA2BusySemHandle,
 						osWaitForever);
 						if (osSemaphoreAcquire(DMA2BusySemHandle, 1000) < 0) {
-							osSemaphoreRelease(DMA2BusySemHandle);
+//							osSemaphoreRelease(DMA2BusySemHandle);
 							for (uint8_t j = 0; j < 4; j++, i += 2) {
 								sensorsDataBuffer[i] = 0xFF;
 								sensorsDataBuffer[i + 1] = 0xFF;
 							}
 						} else {
-							osSemaphoreRelease(DMA2BusySemHandle);
+//							osSemaphoreRelease(DMA2BusySemHandle);
 							for (uint8_t j = 0; j < 4; j++, i += 2) {
 								sensorsDataBuffer[i] = data[j] >> 8;
 								sensorsDataBuffer[i + 1] = data[j];
 							}
 						}
+						osSemaphoreRelease(DMA2BusySemHandle);
 						// ///PLACEHOLDER FOR ACCELEROMETERS AND MICROPHONE/// //
 						i += 6;
 
