@@ -46,7 +46,7 @@
 #define IFNAME1 't'
 
 /* USER CODE BEGIN 1 */
-
+#ifdef __DUMMY_ETH_TX_BUFF //NEVER USE IT
 /* USER CODE END 1 */
 
 /* Private variables ---------------------------------------------------------*/
@@ -71,7 +71,15 @@ __ALIGN_BEGIN uint8_t Rx_Buff[ETH_RXBUFNB][ETH_RX_BUF_SIZE] __ALIGN_END; /* Ethe
 __ALIGN_BEGIN uint8_t Tx_Buff[ETH_TXBUFNB][ETH_TX_BUF_SIZE] __ALIGN_END; /* Ethernet Transmit Buffer */
 
 /* USER CODE BEGIN 2 */
+#else
+ETH_DMADescTypeDef  DMARxDscrTab[ETH_RXBUFNB] __attribute__((section(".RxDecripSection")));/* Ethernet Rx DMA Descriptors */
 
+ETH_DMADescTypeDef  DMATxDscrTab[ETH_TXBUFNB] __attribute__((section(".TxDescripSection")));/* Ethernet Tx DMA Descriptors */
+
+uint8_t Rx_Buff[ETH_RXBUFNB][ETH_RX_BUF_SIZE] __attribute__((section(".RxarraySection"))); /* Ethernet Receive Buffers */
+
+uint8_t Tx_Buff[ETH_TXBUFNB][ETH_TX_BUF_SIZE] __attribute__((section(".TxarraySection"))); /* Ethernet Transmit Buffers */
+#endif /*__USE_OLD_ETH_TX_BUFF */
 /* USER CODE END 2 */
 
 /* Semaphore to signal incoming packets */

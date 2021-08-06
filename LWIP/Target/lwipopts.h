@@ -49,12 +49,14 @@
 /* Parameters set in STM32CubeMX LwIP Configuration GUI -*/
 /*----- Value in opt.h for LWIP_DHCP: 0 -----*/
 #define LWIP_DHCP 1
+/*----- Default Value for LWIP_MPU_COMPATIBLE: 0 ---*/
+#define LWIP_MPU_COMPATIBLE 1
 /*----- Default Value for LWIP_TCPIP_CORE_LOCKING: 0 ---*/
 #define LWIP_TCPIP_CORE_LOCKING 1
 /*----- Value in opt.h for MEM_ALIGNMENT: 1 -----*/
 #define MEM_ALIGNMENT 4
 /*----- Default Value for MEM_SIZE: 1600 ---*/
-#define MEM_SIZE 10240
+#define MEM_SIZE 20480
 /*----- Default Value for MEMP_NUM_PBUF: 16 ---*/
 #define MEMP_NUM_PBUF 20
 /*----- Default Value for MEMP_NUM_TCP_SEG: 16 ---*/
